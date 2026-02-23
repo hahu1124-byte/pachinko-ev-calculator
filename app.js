@@ -294,18 +294,22 @@ document.addEventListener('DOMContentLoaded', () => {
             noteDisplay.textContent = activeBorderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
             return;
         }
-
         const totalSpinsDaily = totalSpinsMeasured;
         totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
 
         // --- 3. 期待値計算 (通常時 + 遊タイム期待度) ---
 
-        // 1. 通常時の単価 (J18, J19 相当)
+        // 1回転あたりの期待「差引玉数」 (Profit in balls per spin)
+        // ボーダー比での収支期待値
+        const expectedBallsPerSpin = (250 / activeBorderBase) - (250 / turnRatePer1k);
+
+        // 通常時の単価 (1回転あたり)
         // 持玉単価 (1回転あたり)
-        // ※ 期待差引玉数 × 換金価格 
-        const normalBallUnitPrice = (measuredRb / (primaryProb) - (250 / activeBorderBase)) * (playRate / 250) * 250;
+        const normalBallUnitPrice = expectedBallsPerSpin * playRate;
         // 現金単価 (1回転あたり)
-        const normalCashUnitPrice = (measuredRb / (primaryProb) - (275 / activeBorderBase)) * (playRate / 250) * 250;
+        // 現金投資分に対して、換金ギャップ(貸玉価格 - 換金価格)による損失を差し引く
+        const actualBallsPerSpin = (250 / turnRatePer1k);
+        const normalCashUnitPrice = normalBallUnitPrice - (actualBallsPerSpin * (playRate - valuePerBallCashout));
 
         // 通常時の持玉比率単価 (J20相当)
         const normalValuePerSpin = (normalBallUnitPrice * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
@@ -320,15 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
 
             // 換算係数 (G18相当: 4 / 交換率)
-            // 手数料無料の場合は 1.0 に近くなる。スプレッドシート式は playRate / (1玉あたりの換金単価)
-            const conversionFactor = playRate / valuePerBallCashout;
+            // = 4 / (1000 / exchangeRateBalls) = 4 * exchangeRateBalls / 1000
+            // app.jsでは valuePerBallCashout が「1円あたりの玉数」ベースで計算されているため、
+            // playRate / valuePerBallCashout ではなく、playRate = 4 の時の「4 / 換金価格」を再現する
+            const conversionFactor = (4 / ((1000 / exchangeRateBalls) * (4 / 4))); // 4円あたりの交換率ベースの係数
 
             // 遊タイム期待度 (G23相当: 天井到達率)
-            // = 1 - (1 - 1/大当たり確率)^残り回転数
             const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinsRemaining);
 
             // 遊タイム持玉単価 (K18相当)
-            // 単価がプラスなら期待度を掛け、マイナスなら係数を掛けて補正（スプレッドシートのロジック）
             const yutimeBallUnitPrice = normalBallUnitPrice >= 0
                 ? (normalBallUnitPrice / conversionFactor * yutimeExpectancy)
                 : (normalBallUnitPrice * conversionFactor / yutimeExpectancy);
@@ -341,16 +345,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 遊タイム持玉比率単価
             yutimeValuePerSpin = (yutimeBallUnitPrice * ballRatio) + (yutimeCashUnitPrice * (1 - ballRatio));
 
-            // 遊タイム上乗せ期待値 (スプレッドシートの期待値表示用)
+            // 遊タイム上乗せ期待値
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
         }
 
-        // 実質ボーダーラインの算出
-        const gapFactor = ((1 - ballRatio) * playRate + ballRatio * valuePerBallCashout) / valuePerBallCashout;
-        const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
-
         // --- 4. 結果表示 ---
-        // メインの期待値表示：通常と遊タイムの高い方を採用
+        // メインの期待値表示：通常と遊タイムの高い方を採用 (遊込表示)
         const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
         // 履歴保存用の単価：通常と遊タイムの高い方を採用
         const finalValuePerSpin = hasYutime ? Math.max(normalValuePerSpin, yutimeValuePerSpin) : normalValuePerSpin;
@@ -361,7 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ballEvPerSpinDisplay.textContent = formatSpinValue(normalBallUnitPrice);
         cashEvPerSpinDisplay.textContent = formatSpinValue(normalCashUnitPrice);
 
-        if (hasYutime && yutimeEV > 0) {
+        // 遊タイム情報の表示
+        if (hasYutime) {
             yutimeEvRow.style.display = 'flex';
             yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV));
             yutimeValueRow.style.display = 'flex';
@@ -374,15 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 保存用のデータを一時保持
         latestCalculation = {
             id: Date.now(),
-            machineName: machineData[selectedIdx] ? machineData[selectedIdx].name : "手入力台",
+            machineName: machineData[selectedIdx] ? machineData[selectedIdx].name + (hasYutime ? " (遊込)" : "") : "手入力台",
             playRate: playRate,
-            investCashK: investCashK,
             turnRate: turnRatePer1k,
             totalSpinsMeasured: totalSpinsMeasured,
             dailyEV: mainEV,
             valuePerSpin: finalValuePerSpin,
-            ballEv: normalBallUnitPrice,
-            cashEv: normalCashUnitPrice,
             hasYutime: hasYutime,
             yutimeEV: yutimeEV
         };
