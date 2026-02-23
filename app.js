@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeRbs = rows[3]; // 遊タイム中 期待獲得R数
             const probs = rows[4]; // トータル確率
             const yutimes = rows[5]; // 遊タイム突入回転数 (Excelの6行目はindex 5)
+            const avgChains = rows[10]; // 平均連荘 (11行目, index 10)
+            const yutimeSpinCounts = rows[15]; // 遊タイム回数 (16行目, index 15)
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
@@ -96,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prob = parseFloat(probs[i]);
                 const yutimeSpinLimit = parseFloat(yutimes[i]) || 0;
                 const yutimeRbMulti = parseFloat(yutimeRbs[i]) || 0;
+                const avgChain = avgChains && avgChains[i] ? parseFloat(avgChains[i]) || 0 : 0;
+                const yutimeSpinCount = yutimeSpinCounts && yutimeSpinCounts[i] ? parseFloat(yutimeSpinCounts[i]) || 0 : 0;
 
                 if (rb > 0 && prob > 0) {
                     // 等価ボーダー = 250 / (仮定RB / トータル確率)
@@ -107,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         primaryProb: primaryProb,
                         rb: rb,
                         yutimeSpins: yutimeSpinLimit,
-                        yutimeRb: yutimeRbMulti
+                        yutimeRb: yutimeRbMulti,
+                        avgChain: avgChain,
+                        yutimeSpinCount: yutimeSpinCount
                     });
                 }
             }
@@ -117,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading machines CSV (CORS likely blocked local access):', error);
             // ローカル実行時など、CORSエラーで取得できない場合のフォールバックデータ
             machineData = [
-                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23 },
-                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0 },
-                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0 }
+                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23, avgChain: 3.011, yutimeSpinCount: 350 },
+                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 },
+                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 }
             ];
 
             const option = document.createElement('option');
@@ -224,6 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
             machineYutimeLimit = machine.yutimeSpins || 0;
             machineYutimeRb = machine.yutimeRb || 0;
         }
+
+        // 追加データ (平均連荘, 遊タイム回数)
+        const machineAvgChain = machineData[selectedIdx] ? (machineData[selectedIdx].avgChain || 0) : 0;
+        const machineYutimeSpinCount = machineData[selectedIdx] ? (machineData[selectedIdx].yutimeSpinCount || 0) : 0;
 
         // 実戦データからの回転率計算
         const startSpin = parseFloat(startSpinInput.value) || 0;
@@ -330,27 +340,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
 
             // === G18: 換算係数 = 4 / 交換率(円) ===
-            // 交換率(円) = valuePerBallCashout × (4 / playRate) で4円ベースに変換
-            const exchangeRateYen = valuePerBallCashout * (4 / playRate); // 4円ベースでの1玉の換金価値
-            const conversionFactor = 4 / exchangeRateYen; // G18 = 4 / 交換率
+            const exchangeRateYen = valuePerBallCashout * (4 / playRate);
+            const conversionFactor = 4 / exchangeRateYen;
 
             // === G23: 遊タイム期待度 (天井到達率) ===
-            // = 1 - (1 - 1/大当たり確率)^残り回転数
-            const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinsRemaining);
-
-            // === G4: 遊タイムのトータル確率 ===
-            // 遊タイム中の期待R数(yutimeRb)を使ったトータル確率
-            // G4 = 250 / (仮定RB * 遊タイムRB数 / 大当たり確率)
-            // ※ 通常のトータル確率 prob = 250 / (defaultRb / primaryProb) と同じ形式で
-            //   遊タイム中のRB数を使用
-            const yutimeTotalProb = defaultRb > 0 ? (250 / (defaultRb * machineYutimeRb / primaryProb)) : prob;
+            // CSV 16行目の「遊タイム回数」を指数に使用（大海5SP = 350）
+            const yutimeSpinCountForCalc = machineYutimeSpinCount > 0 ? machineYutimeSpinCount : yutimeSpinsRemaining;
+            const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinCountForCalc);
 
             // === F5: 実質確率 ===
-            // 遊タイム到達確率を加味した実質的な大当たり確率
-            // F5 = 1 / (1/大当たり確率 + 遊タイム期待度 × 遊タイムRB数 / 大当たり確率)
-            // ≒ primaryProb / (1 + yutimeExpectancy × machineYutimeRb)
-            // 別の解釈: 遊タイム込みで「実質的に何回転に1回当たるか」
-            const effectiveProb = primaryProb / (1 + yutimeExpectancy * machineYutimeRb);
+            // F5 = 大当たり確率 × (1 - ((大当たり確率-1)/大当たり確率)^MAX(0, 残り回転数))
+            const missProb = (primaryProb - 1) / primaryProb;
+            const effectiveProb = primaryProb * (1 - Math.pow(missProb, Math.max(0, yutimeSpinsRemaining)));
+
+            // === G4: 遊タイムのトータル確率 ===
+            // CSV 11行目の「平均連荘」を使用（大海5SP = 3.011）
+            // G4 = effectiveProb / (平均連荘 × 10)
+            const yutimeTotalProb = machineAvgChain > 0 && effectiveProb > 0
+                ? effectiveProb / (machineAvgChain * 10)
+                : prob;
 
             // === K18: 遊タイム持玉単価 ===
             // K18 = IF(J18>=0, J18/G18*G23, J18*G18/G23)
