@@ -49,15 +49,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // Preset Machine Logic
     let machineData = [];
 
-    // Fetch machines data
-    fetch('machines.json')
-        .then(response => response.json())
-        .then(data => {
-            machineData = data;
+    // Google Sheets CSV URL
+    const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
+
+    // Fetch machines data from Google Sheets CSV
+    fetch(sheetCsvUrl)
+        .then(response => response.text())
+        .then(csvText => {
+            const rows = csvText.split('\n').map(row => row.split(','));
+
+            // CSV Rows:
+            // 0: "", "Machine 1", "Machine 2"...
+            // 1: "大当たり確率", ...
+            // 2: "仮定RB", ...
+            // 3: "遊抜けor右打ち継続率", ...
+            // 4: "トータル確率", ...
+
+            const names = rows[0];
+            const rbs = rows[2];
+            const probs = rows[4];
+
+            machineData = [];
+            for (let i = 1; i < names.length; i++) {
+                const name = names[i] ? names[i].trim() : "";
+                if (!name) continue;
+
+                const rb = parseFloat(rbs[i]);
+                const prob = parseFloat(probs[i]);
+
+                if (rb > 0 && prob > 0) {
+                    // 等価ボーダー = 250 / (仮定RB / トータル確率)
+                    const border = 250 / (rb / prob);
+                    machineData.push({
+                        name: name,
+                        border: border.toFixed(2),
+                        borderRaw: border
+                    });
+                }
+            }
             populateMachineSelect();
         })
         .catch(error => {
-            console.error('Error loading machines:', error);
+            console.error('Error loading machines CSV:', error);
             const option = document.createElement('option');
             option.value = "";
             option.textContent = "-- 機種データの読み込みに失敗しました --";
@@ -65,9 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     function populateMachineSelect() {
+        // Clear existing options except the first one
+        machineSelect.innerHTML = '<option value="">-- 機種を選択するか直接入力 --</option>';
+
         machineData.forEach(machine => {
             const option = document.createElement('option');
-            option.value = machine.border;
+            option.value = machine.borderRaw;
             option.textContent = `${machine.name} (${machine.border})`;
             machineSelect.appendChild(option);
         });
@@ -75,7 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     machineSelect.addEventListener('change', (e) => {
         if (e.target.value) {
-            borderInput.value = e.target.value;
+            // display up to 1 decimal place dynamically, or 2 if needed
+            borderInput.value = parseFloat(e.target.value).toFixed(2);
             calculateEV();
         }
     });
