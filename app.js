@@ -314,13 +314,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
         }
 
-        evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
-        evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
+        const mainEV = hasYutime ? yutimeEV : dailyEV;
+
+        evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
+        // 時間あたりの期待値も、遊タイム込みの場合は総期待値を時間で割る
+        evHourlyDisplay.textContent = formatCurrency(Math.round(hours > 0 ? (mainEV / hours) : 0));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
         valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
         ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
         cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
-
 
         // 保存用のデータを一時保持
         latestCalculation = {
@@ -329,14 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
             playRate: playRate,
             investCashK: investCashK,
             turnRate: turnRatePer1k,
-            dailyEV: (hasYutime ? yutimeEV : dailyEV),
+            dailyEV: mainEV,
             ballEv: ballEvPerSpin,
             hasYutime: hasYutime,
             yutimeEV: yutimeEV
         };
 
         // 色とメッセージの更新
-        const mainEV = hasYutime ? yutimeEV : dailyEV;
         if (mainEV > 0) {
             evDailyDisplay.className = 'amount positive';
             evHourlyDisplay.className = 'amount positive';
@@ -355,10 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = '期待値プラマイゼロのラインです。';
-        }
-
-        if (hasYutime) {
-            evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         }
     }
 
