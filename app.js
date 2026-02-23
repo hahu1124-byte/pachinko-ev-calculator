@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Result Elements
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const evHourlyDisplay = document.getElementById('expected-value-hourly');
+    const totalSpinsDisplay = document.getElementById('total-spins');
+    const realBorderDisplay = document.getElementById('real-border');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
     const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
