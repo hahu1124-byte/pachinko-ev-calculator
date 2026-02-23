@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
     const noteDisplay = document.getElementById('ev-note');
     const yutimeSpinsInput = document.getElementById('yutime-spins');
-    const yutimeRbInput = document.getElementById('yutime-rb');
     const yutimeEvRow = document.getElementById('yutime-ev-row');
     const yutimeEvOnlyDisplay = document.getElementById('yutime-ev-only');
 
@@ -99,11 +98,21 @@ document.addEventListener('DOMContentLoaded', () => {
             populateMachineSelect();
         })
         .catch(error => {
-            console.error('Error loading machines CSV:', error);
+            console.error('Error loading machines CSV (CORS likely blocked local access):', error);
+            // ローカル実行時など、CORSエラーで取得できない場合のフォールバックデータ
+            machineData = [
+                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140 },
+                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140 },
+                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140 }
+            ];
+
             const option = document.createElement('option');
             option.value = "";
-            option.textContent = "-- 機種データの読み込みに失敗しました --";
+            option.textContent = "-- 通信エラー: サンプル機種データを読み込みました --";
+            option.disabled = true;
             machineSelect.appendChild(option);
+
+            populateMachineSelect();
         });
 
     function populateMachineSelect() {
@@ -291,11 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let yutimeEV = 0;
         let yutimeBonusEV = 0;
         const yutimeSpins = parseFloat(yutimeSpinsInput.value) || 0;
-        const yutimeRb = parseFloat(yutimeRbInput.value) || 0;
         let hasYutime = false;
 
         // primaryProb (大当たり確率) が取得できている場合のみ遊タイム計算を行う
-        if (yutimeSpins > 0 && yutimeRb > 0 && primaryProb > 0 && prob > 0) {
+        if (yutimeSpins > 0 && primaryProb > 0 && prob > 0) {
             hasYutime = true;
             // 天井到達率 (K8) = 1 - (1 - 1/大当たり確率) ^ 残り回転数  ※スプレッドシートは到達しない確率を引く形が一般的
             // スプレッドシートの到達率: (1 - 1/319.688)^950 = 0.05098 (非到達)
@@ -303,8 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const missProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
             const reachProb = 1 - missProb;
 
-            // 天井到達時の獲得期待玉数
-            const yutimeExpectedBalls = yutimeRb * (measuredRb > 0 ? measuredRb : defaultRb);
+            // 天井到達時の獲得期待玉数 (実測RBまたは機種データRBを使用)
+            const yutimeExpectedBalls = (measuredRb > 0 ? measuredRb : defaultRb);
 
             // J15: 遊タイム期待値 (等価) = 到達率 × 期待玉数 × 等価交換単価 
             // 等価交換単価は、貸玉料金と同等 (投資にギャップがない状態)
