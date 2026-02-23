@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const playRateRadios = document.querySelectorAll('input[name="play-rate"]');
     const exchangeRateSelect = document.getElementById('exchange-rate');
     const customExchangeInput = document.getElementById('custom-exchange');
-    const hasFeeCheckbox = document.getElementById('has-fee');
     const ballRatioGroup = document.getElementById('ball-ratio-group');
     const ballRatioInput = document.getElementById('ball-ratio');
     const ballRatioDisplay = document.getElementById('ball-ratio-display');
@@ -30,15 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
             customExchangeInput.classList.remove('hidden');
         } else {
             customExchangeInput.classList.add('hidden');
-        }
-        calculateEV();
-    });
-
-    hasFeeCheckbox.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            ballRatioGroup.classList.remove('hidden');
-        } else {
-            ballRatioGroup.classList.add('hidden');
         }
         calculateEV();
     });
@@ -146,9 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 例: 1円パチンコ、等価(250選択) -> (1000/250) * (1/4) = 4 * 0.25 = 1.0円/玉
         let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
 
-        // 手数料設定
-        const hasFee = hasFeeCheckbox.checked;
-        const ballRatio = hasFee ? parseFloat(ballRatioInput.value) / 100 : 1.0;
+        // 持ち玉比率
+        const ballRatio = parseFloat(ballRatioInput.value) / 100;
 
         // --- 2. 機種・ベースデータの取得 ---
         // ここで入力するボーダーラインは「4円・等価」基準の公表値（例:18.0回/250玉）を想定しています。
@@ -191,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 交換ギャップを含めた金額期待値の算出
         const investmentPrice = playRate; // 4円、2円、1円
-        const cashoutPrice = hasFee ? valuePerBallCashout : playRate;
+        const cashoutPrice = valuePerBallCashout;
 
         // 持玉単価 (1回転)
         // = 期待差引玉数 × 換金価格（※手数料なしなら貸玉と同じ）
@@ -212,13 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dailyEV = hourlyEV * hours;
 
         // 実質ボーダーラインの算出
-        let realBorder;
-        if (hasFee) {
-            const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
-            realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
-        } else {
-            realBorder = borderBase * (ballsPer1k / 250);
-        }
+        const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
+        const realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
 
         // --- 4. 結果表示 ---
         evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));

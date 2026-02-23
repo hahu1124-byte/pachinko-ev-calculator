@@ -13,7 +13,6 @@
     <div class="container">
         <header>
             <h1>パチンコ期待値計算ツール</h1>
-            <p>レート・交換率対応の高精度EVシミュレーター</p>
         </header>
 
         <main>
@@ -50,15 +49,7 @@
                     <input type="number" id="custom-exchange" class="hidden" placeholder="例: 280 (1000円あたりの玉数)" min="1">
                 </div>
 
-                <div class="input-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="has-fee">
-                        換金手数料あり (非等価・ギャップあり)
-                    </label>
-                    <p class="field-hint">※持ち玉で遊技する割合（持ち玉比率）を加味した期待値計算を行います。</p>
-                </div>
-
-                <div class="input-group hidden" id="ball-ratio-group">
+                <div class="input-group" id="ball-ratio-group">
                     <label for="ball-ratio">持ち玉比率: <span id="ball-ratio-display">100</span>%</label>
                     <input type="range" id="ball-ratio" min="0" max="100" value="100" step="1">
                     <div class="range-labels">
