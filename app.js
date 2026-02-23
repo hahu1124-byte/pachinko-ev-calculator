@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const names = rows[0];
             const primaryProbs = rows[1]; // 大当たり確率
             const rbs = rows[2];
+            const yutimeRbs = rows[3]; // 遊タイム中 期待獲得R数
             const probs = rows[4]; // トータル確率
             const yutimes = rows[5]; // 遊タイム突入回転数 (Excelの6行目はindex 5)
 
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rb = parseFloat(rbs[i]);
                 const prob = parseFloat(probs[i]);
                 const yutimeSpinLimit = parseFloat(yutimes[i]) || 0;
+                const yutimeRbMulti = parseFloat(yutimeRbs[i]) || 0;
 
                 if (rb > 0 && prob > 0) {
                     // 等価ボーダー = 250 / (仮定RB / トータル確率)
@@ -94,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         prob: prob,
                         primaryProb: primaryProb,
                         rb: rb,
-                        yutimeSpins: yutimeSpinLimit
+                        yutimeSpins: yutimeSpinLimit,
+                        yutimeRb: yutimeRbMulti
                     });
                 }
             }
@@ -104,9 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading machines CSV (CORS likely blocked local access):', error);
             // ローカル実行時など、CORSエラーで取得できない場合のフォールバックデータ
             machineData = [
-                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950 },
-                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0 },
-                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0 }
+                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23 },
+                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0 },
+                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0 }
             ];
 
             const option = document.createElement('option');
@@ -135,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
             const gapFactor = investmentPrice / cashoutPrice;
             const cashBorder = machine.border * gapFactor;
-            const yutimeText = machine.yutimeSpins > 0 ? ` - ${machine.yutimeSpins}` : '';
+            const yutimeText = machine.yutimeSpins > 0 ? ` 遊${machine.yutimeSpins}` : '';
 
             const option = document.createElement('option');
             option.value = index;
@@ -183,6 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let primaryProb = 0;
         let defaultRb = 0;
         let machineYutimeLimit = 0;
+        let machineYutimeRb = 0;
 
         const selectedIdx = machineSelect.value;
         if (selectedIdx !== "" && machineData[selectedIdx]) {
@@ -192,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             primaryProb = machine.primaryProb;
             defaultRb = machine.rb;
             machineYutimeLimit = machine.yutimeSpins || 0;
+            machineYutimeRb = machine.yutimeRb || 0;
         }
 
         // 実戦データからの回転率計算
@@ -316,8 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const missProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
             const reachProb = 1 - missProb;
 
-            // 天井到達時の獲得期待玉数 (実測RBまたは機種データRBを使用)
-            const yutimeExpectedBalls = (measuredRb > 0 ? measuredRb : defaultRb);
+            // 天井到達時の獲得期待玉数 = (1R出玉) × 遊タイム到達時の期待獲得 R数
+            // ※ 実測1Rが入力されていればそれを優先
+            const yutimeExpectedBalls = (measuredRb > 0 ? measuredRb : defaultRb) * machineYutimeRb;
 
             // J15: 遊タイム期待値 (等価) = 到達率 × 期待玉数 × 等価交換単価 
             // 等価交換単価は、貸玉料金と同等 (投資にギャップがない状態)
