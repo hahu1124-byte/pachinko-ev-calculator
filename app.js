@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
             const gapFactor = investmentPrice / cashoutPrice;
             const cashBorder = machine.border * gapFactor;
-            const yutimeText = machine.yutimeSpins > 0 ? ` 遊${machine.yutimeSpins}` : '';
+            const yutimeText = machine.yutimeSpins > 0 ? ` - ${machine.yutimeSpins}` : '';
 
             const option = document.createElement('option');
             option.value = index;
@@ -351,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const mainEV = hasYutime ? yutimeEV : dailyEV;
+        console.log('calculateEV DEBUG:', { mainEV, dailyEV, yutimeEV, hasYutime, yutimeSpins, primaryProb, activeBorderBase, realBorder, valuePerSpin, turnRatePer1k, totalSpinsMeasured });
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
