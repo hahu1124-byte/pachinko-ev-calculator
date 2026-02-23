@@ -299,6 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 3. 期待値計算 (通常時 + 遊タイム期待度) ---
 
+        // 実質ボーダーラインの算出
+        const gapFactor = ((1 - ballRatio) * playRate + ballRatio * valuePerBallCashout) / valuePerBallCashout;
+        const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
+
         // 1回転あたりの期待「差引玉数」 (Profit in balls per spin)
         // ボーダー比での収支期待値
         const expectedBallsPerSpin = (250 / activeBorderBase) - (250 / turnRatePer1k);
