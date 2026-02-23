@@ -20,8 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Result Elements
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const evHourlyDisplay = document.getElementById('expected-value-hourly');
-    const totalSpinsDisplay = document.getElementById('total-spins');
-    const realBorderDisplay = document.getElementById('real-border');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
     const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
@@ -214,8 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
 
-        const hours = parseFloat(hoursInput.value) || 0;
-        const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
+        measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
 
         // 実測1R出玉の計算
         const bonusRounds = parseFloat(bonusRoundsInput.value) || 0;
@@ -255,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const totalSpinsDaily = hours * spinsPerHour;
+        const totalSpinsDaily = totalSpinsMeasured;
         totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
 
         // --- 3. 期待値計算のコアロジック ---
@@ -287,12 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // = 持玉単価 × 持ち玉比率 + 現金単価 × 現金比率
         const valuePerSpin = (ballEvPerSpin * ballRatio) + (cashEvPerSpin * (1 - ballRatio));
 
-        // 時給と日給
-        const hourlyEV = valuePerSpin * spinsPerHour;
-        const dailyEV = hourlyEV * hours;
+        // 時給入力廃止にともない、総期待値＝（総合単価×実際の総回転数）とする
+        const dailyEV = valuePerSpin * totalSpinsMeasured;
 
-        // 遊タイム期待値算出 (簡易版)
+        // 遊タイム期待値算出 (スプレッドシート準拠)
         let yutimeEV = 0;
+        let yutimeBonusEV = 0;
         const yutimeSpins = parseFloat(yutimeSpinsInput.value) || 0;
         const yutimeRb = parseFloat(yutimeRbInput.value) || 0;
         let hasYutime = false;
@@ -300,14 +297,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // primaryProb (大当たり確率) が取得できている場合のみ遊タイム計算を行う
         if (yutimeSpins > 0 && yutimeRb > 0 && primaryProb > 0 && prob > 0) {
             hasYutime = true;
-            // 天井到達率 = (1 - 1/大当たり確率) ^ 残り回転数
-            const reachProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
-            // 天井到達時の獲得期待玉数 (遊タイム中のトータル確率などを厳密に考慮することも可能だが、ここではシンプルに期待R数×1R出玉)
-            const yutimeExpectedBalls = yutimeRb * (measuredRb > 0 ? measuredRb : defaultRb);
-            // 天井到達によるプラス期待値分 = 到達率 × 獲得期待玉数 × 換金率
-            const yutimeBonusEV = reachProb * yutimeExpectedBalls * cashoutPrice;
+            // 天井到達率 (K8) = 1 - (1 - 1/大当たり確率) ^ 残り回転数  ※スプレッドシートは到達しない確率を引く形が一般的
+            // スプレッドシートの到達率: (1 - 1/319.688)^950 = 0.05098 (非到達)
+            // 到達率は 1 - 0.05098 = 0.949019
+            const missProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
+            const reachProb = 1 - missProb;
 
-            // 通常の期待値に遊タイム分の期待値を上乗せする方針
+            // 天井到達時の獲得期待玉数
+            const yutimeExpectedBalls = yutimeRb * (measuredRb > 0 ? measuredRb : defaultRb);
+
+            // J15: 遊タイム期待値 (等価) = 到達率 × 期待玉数 × 等価交換単価 
+            // 等価交換単価は、貸玉料金と同等 (投資にギャップがない状態)
+            const yutimeEvEq = reachProb * yutimeExpectedBalls * investmentPrice;
+
+            // J16: 遊タイム期待値 (現金) 
+            // 現金投資で遊タイムを追う場合、到達までに消費する玉数に対するギャップ損失分を引く必要がある
+            // 遊タイム到達までに必要な期待消費玉数（平均到達回転数に基づく厳密な計算が必要だが、スプレッドシート近似として）
+            // スプレッドシートの J16 は等価期待値にギャップ係数や現金投資割合を掛けて算出されている可能性が高い
+            // ここでは換金率を用いた現金単価の計算として YutimeEq * (換金単価 / 貸玉単価) または到達消費分のギャップ引きと解釈
+            // ユーザー指定「J15=等価単価, J16=現金単価」の通り、交換率直接の価格差を反映する
+            const yutimeEvCash = reachProb * yutimeExpectedBalls * cashoutPrice - (yutimeSpins * requiredBallsPerSpinActual * (investmentPrice - cashoutPrice));
+
+            // J14: 遊タイム期待値 (持玉比率単価) = 等価 × 持ち玉比率 + 現金 × 現金比率 
+            // ※スプレッドシートの期待値合算に合わせる
+            yutimeBonusEV = (yutimeEvEq * ballRatio) + (yutimeEvCash * (1 - ballRatio));
+
+            // 通常の期待値に遊タイム分の期待値を上乗せする
             yutimeEV = dailyEV + yutimeBonusEV;
         }
 
@@ -325,8 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainEV = hasYutime ? yutimeEV : dailyEV;
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
-        // 時間あたりの期待値も、遊タイム込みの場合は総期待値を時間で割る
-        evHourlyDisplay.textContent = formatCurrency(Math.round(hours > 0 ? (mainEV / hours) : 0));
+        // 時間あたりの期待値の代わりに総回転数からの期待値を直接表示
+        // evHourlyDisplay (時給換算) の要素はUI上削除されたが、例外エラーを防ぐためチェックして更新
+        if (evHourlyDisplay) {
+            evHourlyDisplay.parentElement.style.display = 'none'; // 親ごと非表示にしておく
+        }
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
         valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
         ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
@@ -346,6 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playRate: playRate,
             investCashK: investCashK,
             turnRate: turnRatePer1k,
+            totalSpinsMeasured: totalSpinsMeasured,
             dailyEV: mainEV,
             ballEv: ballEvPerSpin,
             hasYutime: hasYutime,
@@ -392,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" class="history-checkbox" data-id="${item.id}">
                 </div>
                 <div class="history-item-body">
-                    <p><span>回転率:</span> <span>${item.turnRate.toFixed(2)} / 1k</span></p>
+                    <p><span>回転率:</span> <span>${item.turnRate.toFixed(2)} / 1k (${item.totalSpinsMeasured}回転)</span></p>
                     <p><span>持玉単価:</span> <span>¥${item.ballEv.toFixed(2)}</span></p>
                     <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${item.dailyEV >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV))}</span></p>
                 </div>
