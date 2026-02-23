@@ -64,15 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('change', calculateEV);
     });
 
+    // Preset Machine Logic
+    let machineData = [];
+
     // 初回の計算呼び出し（DOM未完全やデータ未ロード時のエラーで後続処理が止まるのを防ぐ）
     try {
         calculateEV();
     } catch (e) {
         console.warn('Initial calculateEV skipped or failed:', e);
     }
-
-    // Preset Machine Logic
-    let machineData = [];
 
     // Google Sheets CSV URL
     const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
@@ -432,11 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 4. 結果表示 ---
         // メインの期待値表示：通常と遊タイムの高い方を採用 (遊込表示)
-        const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
+        let mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
         // 履歴保存用の単価：通常と遊タイムの高い方を採用
-        const finalValuePerSpin = hasYutime && yutimeValuePerSpin > normalValuePerSpin
+        let finalValuePerSpin = hasYutime && yutimeValuePerSpin > normalValuePerSpin
             ? yutimeValuePerSpin
             : normalValuePerSpin;
+
+        if (!isFinite(mainEV)) mainEV = 0;
+        if (!isFinite(finalValuePerSpin)) finalValuePerSpin = 0;
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
