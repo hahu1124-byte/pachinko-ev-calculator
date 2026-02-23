@@ -413,30 +413,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // === I18相当: 通常持玉単価 ===
             // 【通常時の持玉単価が0以上の場合】 通常時の持玉単価 / 換算係数
             // 【通常時の持玉単価が0未満の場合】 通常時の持玉単価 * 換算係数
-            yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
+            const i18Result = normalBallUnitPrice >= 0
                 ? (normalBallUnitPrice / conversionFactor)
                 : (normalBallUnitPrice * conversionFactor);
 
             // === I19相当: 現金単価 ===
             // 【通常時の現金単価が0以上の場合】 通常時の現金単価 / 換算係数
             // 【通常時の現金単価が0未満の場合】 通常時の現金単価 * 換算係数
-            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
+            const i19Result = normalCashUnitPrice >= 0
                 ? (normalCashUnitPrice / conversionFactor)
                 : (normalCashUnitPrice * conversionFactor);
 
             // === K18: 遊タイム持玉単価 ===
-            const k18Result = normalBallUnitPrice >= 0
-                ? (yutimeBallUnitPriceResult * yutimeExpectancy)
-                : (yutimeBallUnitPriceResult / yutimeExpectancy);
+            yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
+                ? (i18Result * yutimeExpectancy)
+                : (i18Result / yutimeExpectancy);
 
             // === K19: 遊タイム現金単価 ===
-            const k19Result = normalCashUnitPrice >= 0
-                ? (yutimeCashUnitPriceResult * yutimeExpectancy)
-                : (yutimeCashUnitPriceResult / yutimeExpectancy);
+            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
+                ? (i19Result * yutimeExpectancy)
+                : (i19Result / yutimeExpectancy);
 
             // === J20相当: 遊タイム持玉比率単価 ===
             // J20 = (K18 * 持玉比率) + K19 * (1 - 持玉比率)
-            yutimeValuePerSpin = (k18Result * ballRatio) + (k19Result * (1 - ballRatio));
+            yutimeValuePerSpin = (yutimeBallUnitPriceResult * ballRatio) + (yutimeCashUnitPriceResult * (1 - ballRatio));
 
             // 遊タイム期待値 = 遊タイム持玉比率単価 * 総実測回転数
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
