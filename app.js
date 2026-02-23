@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Result Elements
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const totalSpinsDisplay = document.getElementById('total-spins');
-    const realBorderDisplay = document.getElementById('real-border');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
     const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
@@ -346,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeBorderBase <= 0 || isNaN(activeBorderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
-            realBorderDisplay.textContent = '-- 回転 / 1k';
             valuePerSpinDisplay.textContent = '¥0.00';
             ballEvPerSpinDisplay.textContent = '¥0.00';
             cashEvPerSpinDisplay.textContent = '¥0.00';
@@ -359,24 +357,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 3. 期待値計算 (通常時 + 遊タイム期待度) ---
 
-        // 実質ボーダーラインの算出
-        const gapFactor = ((1 - ballRatio) * playRate + ballRatio * valuePerBallCashout) / valuePerBallCashout;
-        const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
+        // 実測優先の1R出玉 (rb) を定義
+        const rb = measuredRb > 0 ? measuredRb : defaultRb;
 
-        // 1回転あたりの期待「差引玉数」 (Profit in balls per spin)
-        // ボーダー比での収支期待値
-        const expectedBallsPerSpin = (250 / activeBorderBase) - (250 / turnRatePer1k);
+        // === G18: 換算係数 = 4 / 交換率(円) ===
+        // 遊タイム計算でも使用する換算係数をここで共通化
+        const exchangeRateYen = valuePerBallCashout * (4 / playRate);
+        const conversionFactor = 4 / exchangeRateYen;
 
-        // 通常時の単価 (1回転あたり)
-        // 持玉単価 (1回転あたり)
-        const normalBallUnitPrice = expectedBallsPerSpin * playRate;
-        // 現金単価 (1回転あたり)
-        // 現金投資分に対して、換金ギャップ(貸玉価格 - 換金価格)による損失を差し引く
-        const actualBallsPerSpin = (250 / turnRatePer1k);
-        const normalCashUnitPrice = normalBallUnitPrice - (actualBallsPerSpin * (playRate - valuePerBallCashout));
+        // === J14: 回転単価(等価) ===
+        // スプレッドシートJ14の数式: (((rb / トータル確率) - (250 / 回転率)) * 4) に各種補正を対応させた等価ベース
+        const j14Result = (((rb / prob) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
 
-        // 通常時の持玉比率単価 (J20相当)
-        const normalValuePerSpin = (normalBallUnitPrice * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
+        // === K14: 通常時の持玉単価 (交換率考慮) ===
+        // K14 = IF(J14>=0, J14/G18, J14*G18)
+        const normalBallUnitPrice = j14Result >= 0
+            ? (j14Result / conversionFactor)
+            : (j14Result * conversionFactor);
+
+        // === J15: 通常時の現金単価 ===
+        // J15 = ((rb / トータル確率 * valuePerBallCashout) - (1000 / 回転率)) * (250 / ballsPer1k)
+        const normalCashUnitPrice = ((rb * valuePerBallCashout / prob) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
+
+        // === J16: 通常時の持玉比率単価 ===
+        // J16 = (MIN(J14, K14) * ballRatio) + J15 * (1 - ballRatio)
+        const normalValuePerSpin = (Math.min(j14Result, normalBallUnitPrice) * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
+
         const dailyEV = normalValuePerSpin * totalSpinsMeasured;
 
         // 2. 遊タイム期待値の計算 (スプレッドシート F5, G4, K18, K19, J20 準拠)
@@ -388,10 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (hasYutime) {
             const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
-
-            // === G18: 換算係数 = 4 / 交換率(円) ===
-            const exchangeRateYen = valuePerBallCashout * (4 / playRate);
-            const conversionFactor = 4 / exchangeRateYen;
 
             // === G23: 遊タイム期待度 (天井到達率) ===
             // CSV 16行目の「遊タイム回数」を指数に使用（大海5SP = 350）
@@ -409,9 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeTotalProb = machineAvgChain > 0 && effectiveProb > 0
                 ? effectiveProb / (machineAvgChain * 10)
                 : prob;
-
-            // 計算式で使用する実質的な1R出玉(rb)を定義 (実測優先)
-            const rb = measuredRb > 0 ? measuredRb : defaultRb;
 
             // === I18相当: 通常持玉単価 ===
             const i18Result = normalBallUnitPrice >= 0
@@ -461,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
-        realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
         valuePerSpinDisplay.textContent = formatSpinValue(finalValuePerSpin);
         ballEvPerSpinDisplay.textContent = formatSpinValue(normalBallUnitPrice);
         cashEvPerSpinDisplay.textContent = formatSpinValue(normalCashUnitPrice);
