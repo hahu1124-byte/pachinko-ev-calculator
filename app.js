@@ -71,14 +71,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // 4: "トータル確率", ...
 
             const names = rows[0];
+            const primaryProbs = rows[1]; // 大当たり確率
             const rbs = rows[2];
-            const probs = rows[4];
+            const probs = rows[4]; // トータル確率
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
                 const name = names[i] ? names[i].trim() : "";
                 if (!name) continue;
 
+                const primaryProb = parseFloat(primaryProbs[i]);
                 const rb = parseFloat(rbs[i]);
                 const prob = parseFloat(probs[i]);
 
@@ -89,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: name,
                         border: border,
                         prob: prob,
+                        primaryProb: primaryProb,
                         rb: rb
                     });
                 }
@@ -165,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 2. 機種・ベースデータの取得 ---
         let borderBase = 0;
         let prob = 0;
+        let primaryProb = 0;
         let defaultRb = 0;
 
         const selectedIdx = machineSelect.value;
@@ -172,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const machine = machineData[selectedIdx];
             borderBase = machine.border;
             prob = machine.prob;
+            primaryProb = machine.primaryProb;
             defaultRb = machine.rb;
         }
 
@@ -290,11 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const yutimeRb = parseFloat(yutimeRbInput.value) || 0;
         let hasYutime = false;
 
-        if (yutimeSpins > 0 && yutimeRb > 0 && prob > 0) {
+        // primaryProb (大当たり確率) が取得できている場合のみ遊タイム計算を行う
+        if (yutimeSpins > 0 && yutimeRb > 0 && primaryProb > 0 && prob > 0) {
             hasYutime = true;
             // 天井到達率 = (1 - 1/大当たり確率) ^ 残り回転数
-            const reachProb = Math.pow(1 - (1 / prob), yutimeSpins);
-            // 天井到達時の獲得期待玉数
+            const reachProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
+            // 天井到達時の獲得期待玉数 (遊タイム中のトータル確率などを厳密に考慮することも可能だが、ここではシンプルに期待R数×1R出玉)
             const yutimeExpectedBalls = yutimeRb * (measuredRb > 0 ? measuredRb : defaultRb);
             // 天井到達によるプラス期待値分 = 到達率 × 獲得期待玉数 × 換金率
             const yutimeBonusEV = reachProb * yutimeExpectedBalls * cashoutPrice;
