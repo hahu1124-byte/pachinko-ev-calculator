@@ -365,11 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 : (normalCashUnitPrice * conversionFactor / yutimeExpectancy);
 
             // === J20: 持玉比率単価 ===
-            // J20 = MIN(J18,K18)*G21 + MIN(J19,K19)*(1-G21)
-            // ※ MIN を使い、通常と遊タイムの低い方（保守的な方）を採用
-            const minBallUnit = Math.min(normalBallUnitPrice, yutimeBallUnitPriceResult);
-            const minCashUnit = Math.min(normalCashUnitPrice, yutimeCashUnitPriceResult);
-            yutimeValuePerSpin = (minBallUnit * ballRatio) + (minCashUnit * (1 - ballRatio));
+            // J20 = K18×持玉比率 + K19×(1-持玉比率)
+            yutimeValuePerSpin = (yutimeBallUnitPriceResult * ballRatio) + (yutimeCashUnitPriceResult * (1 - ballRatio));
 
             // 遊タイム期待値 = 遊タイム持玉比率単価 × 総回転数
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
