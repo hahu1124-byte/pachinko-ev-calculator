@@ -414,13 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === I18相当: 通常持玉単価 ===
             const i18Result = normalBallUnitPrice >= 0
-                ? ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) / conversionFactor)
-                : ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) * conversionFactor);
+                ? ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) / (conversionFactor * conversionFactor))
+                : ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) * (conversionFactor * conversionFactor));
 
             // === I19相当: 現金単価 ===
             const i19Result = normalCashUnitPrice >= 0
-                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) / conversionFactor
-                : (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) * conversionFactor);
+                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) * conversionFactor
+                : (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) / conversionFactor);
 
             // === K18: 遊タイム持玉単価 ===
             yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
