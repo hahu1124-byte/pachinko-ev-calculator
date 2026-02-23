@@ -13,12 +13,77 @@
     <div class="container">
         <header>
             <h1>パチンコ期待値計算ツール</h1>
-            <p>1000円あたりの回転数（ボーダー）から期待値を算出</p>
+            <p>レート・交換率対応の高精度EVシミュレーター</p>
         </header>
 
         <main>
             <div class="card input-section">
-                <h2>機種情報・実戦データ入力</h2>
+                <h2>1. 基本設定（レート・交換率）</h2>
+
+                <div class="input-group">
+                    <label>貸玉料金</label>
+                    <div class="radio-group">
+                        <input type="radio" id="rate-4" name="play-rate" value="4" checked>
+                        <label for="rate-4" class="radio-label">4円 (250玉/1k)</label>
+
+                        <input type="radio" id="rate-2" name="play-rate" value="2">
+                        <label for="rate-2" class="radio-label">2円 (500玉/1k)</label>
+
+                        <input type="radio" id="rate-1" name="play-rate" value="1">
+                        <label for="rate-1" class="radio-label">1円 (1000玉/1k)</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="exchange-rate">交換率 (1000円あたりの玉数)</label>
+                    <div class="select-wrapper">
+                        <select id="exchange-rate">
+                            <option value="250">等価交換 (250玉 / 4.00円)</option>
+                            <option value="280">28玉交換 (280玉 / 3.57円)</option>
+                            <option value="300">30玉交換 (300玉 / 3.33円)</option>
+                            <option value="330">33玉交換 (330玉 / 3.03円)</option>
+                            <option value="400">40玉交換 (400玉 / 2.50円)</option>
+                            <option value="custom">その他（手入力）</option>
+                        </select>
+                    </div>
+                    <input type="number" id="custom-exchange" class="hidden" placeholder="例: 280 (1000円あたりの玉数)" min="1">
+                </div>
+
+                <div class="input-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="has-fee">
+                        換金手数料あり (非等価・ギャップあり)
+                    </label>
+                    <p class="field-hint">※持ち玉で遊技する割合（持ち玉比率）を加味した期待値計算を行います。</p>
+                </div>
+
+                <div class="input-group hidden" id="ball-ratio-group">
+                    <label for="ball-ratio">持ち玉比率: <span id="ball-ratio-display">100</span>%</label>
+                    <input type="range" id="ball-ratio" min="0" max="100" value="100" step="1">
+                    <div class="range-labels">
+                        <span>現金 100%</span>
+                        <span>持ち玉 100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card input-section">
+                <h2>2. 機種情報・実戦データ</h2>
+
+                <div class="input-group">
+                    <label for="machine-select">機種選択（自動入力）</label>
+                    <div class="select-wrapper">
+                        <select id="machine-select">
+                            <option value="">-- 機種を選択するか直接入力 --</option>
+                            <option value="16.5">新世紀エヴァンゲリオン〜未来への咆哮〜 (16.5)</option>
+                            <option value="16.7">Re:ゼロから始める異世界生活 鬼がかりver (16.7)</option>
+                            <option value="17.0">Pフィーバー機動戦士ガンダムSEED (17.0)</option>
+                            <option value="17.2">e Re:ゼロから始める異世界生活 season2 (17.2)</option>
+                            <option value="17.5">P大海物語5 (17.5)</option>
+                            <option value="18.0">Pとある魔術の禁書目録2 (18.0)</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="input-group">
                     <label for="border">等価ボーダーライン (回転/1000円)</label>
@@ -30,23 +95,24 @@
                     <input type="number" id="turn-rate" placeholder="例: 20.0" step="0.1" min="0">
                 </div>
 
-                <div class="input-group">
-                    <label for="hours">想定稼働時間 (時間)</label>
-                    <input type="number" id="hours" placeholder="例: 10" step="0.5" min="0">
-                </div>
-
-                <div class="input-group">
-                    <label for="spins-per-hour">1時間あたりの通常回転数</label>
-                    <input type="number" id="spins-per-hour" value="200" placeholder="例: 200" min="0">
+                <div class="grid-2col">
+                    <div class="input-group">
+                        <label for="hours">想定稼働 (時間)</label>
+                        <input type="number" id="hours" placeholder="例: 10" step="0.5" value="10" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="spins-per-hour">1時間あたり (回転)</label>
+                        <input type="number" id="spins-per-hour" value="200" placeholder="例: 200" min="0">
+                    </div>
                 </div>
             </div>
 
             <div class="card result-section">
-                <h2>期待値計算結果（等価交換）</h2>
+                <h2>期待値計算結果</h2>
 
                 <div class="result-grid">
                     <div class="result-box ev">
-                        <h3>1日（想定）の期待値</h3>
+                        <h3>1日の期待値</h3>
                         <p class="amount" id="expected-value-daily">¥0</p>
                     </div>
                     <div class="result-box hourly">
@@ -59,6 +125,14 @@
                     <div class="stat-item">
                         <span class="stat-label">総通常回転数:</span>
                         <span class="stat-value" id="total-spins">0 回転</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">実質ボーダー (現在条件):</span>
+                        <span class="stat-value" id="real-border">-- 回転 / 1k</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">1回転あたりの単価:</span>
+                        <span class="stat-value" id="value-per-spin">¥0.00</span>
                     </div>
                 </div>
 

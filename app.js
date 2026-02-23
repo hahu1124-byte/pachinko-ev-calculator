@@ -1,30 +1,107 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // UI Elements
+    const playRateRadios = document.querySelectorAll('input[name="play-rate"]');
+    const exchangeRateSelect = document.getElementById('exchange-rate');
+    const customExchangeInput = document.getElementById('custom-exchange');
+    const hasFeeCheckbox = document.getElementById('has-fee');
+    const ballRatioGroup = document.getElementById('ball-ratio-group');
+    const ballRatioInput = document.getElementById('ball-ratio');
+    const ballRatioDisplay = document.getElementById('ball-ratio-display');
+
+    const machineSelect = document.getElementById('machine-select');
     const borderInput = document.getElementById('border');
     const turnRateInput = document.getElementById('turn-rate');
     const hoursInput = document.getElementById('hours');
     const spinsPerHourInput = document.getElementById('spins-per-hour');
 
+    // Result Elements
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const evHourlyDisplay = document.getElementById('expected-value-hourly');
     const totalSpinsDisplay = document.getElementById('total-spins');
+    const realBorderDisplay = document.getElementById('real-border');
+    const valuePerSpinDisplay = document.getElementById('value-per-spin');
     const noteDisplay = document.getElementById('ev-note');
 
+    // UI Toggle Logic
+    exchangeRateSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+            customExchangeInput.classList.remove('hidden');
+        } else {
+            customExchangeInput.classList.add('hidden');
+        }
+        calculateEV();
+    });
+
+    hasFeeCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            ballRatioGroup.classList.remove('hidden');
+        } else {
+            ballRatioGroup.classList.add('hidden');
+        }
+        calculateEV();
+    });
+
+    ballRatioInput.addEventListener('input', (e) => {
+        ballRatioDisplay.textContent = e.target.value;
+        calculateEV();
+    });
+
+    // Preset Machine Logic
+    machineSelect.addEventListener('change', (e) => {
+        if (e.target.value) {
+            borderInput.value = e.target.value;
+            calculateEV();
+        }
+    });
+
+    // Utilities
     function formatCurrency(amount) {
         const absAmount = Math.abs(amount);
         const formatted = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(absAmount);
         return amount < 0 ? `-${formatted}` : `+${formatted}`;
     }
 
+    // Main Calculation
     function calculateEV() {
-        const border = parseFloat(borderInput.value);
-        const turnRate = parseFloat(turnRateInput.value);
+        // --- 1. 入力値の取得 ---
+        const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
+        const ballsPer1k = 1000 / playRate; // 4円=250玉, 2円=500玉, 1円=1000玉
+
+        let exchangeRateBalls = exchangeRateSelect.value === 'custom'
+            ? parseFloat(customExchangeInput.value)
+            : parseFloat(exchangeRateSelect.value);
+
+        // "1000円あたりの交換玉数" を "1玉あたりの換金単価"に直す (例: 250玉 -> 4.0 , 280玉 -> 約3.57)
+        // 4円設定の時: 1000 / 250 = 4.0円/玉
+        // 1円設定の時は入力欄の「玉数」基準が変わるため、比率で計算
+        // （一般的な非等価表記に合わせるため、入力された「1000円あたりの玉数(4円相当)」から基準単価を出す）
+
+        // ユーザーが選ぶ交換率（250枠/280枠など）は基本的に「4円パチンコ換算での玉数」として扱う方が直感的
+        // なので、1玉の価値 = (1000(円) / 交換率玉数) × (貸玉レート / 4) とする
+        // 例: 1円パチンコ、等価(250選択) -> (1000/250) * (1/4) = 4 * 0.25 = 1.0円/玉
+        let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
+
+        // 手数料設定
+        const hasFee = hasFeeCheckbox.checked;
+        const ballRatio = hasFee ? parseFloat(ballRatioInput.value) / 100 : 1.0;
+
+        // --- 2. 機種・ベースデータの取得 ---
+        // ここで入力するボーダーラインは「4円・等価」基準の公表値（例:18.0回/250玉）を想定しています。
+        // （1円で打つ場合でも「1000円(1000玉)で72回転」ではなく「250玉あたり18回転」という共通指標で入力させる）
+        const borderBase = parseFloat(borderInput.value); // 250玉あたりの回転数
+
+        // 実測の回転率（入力は1000円あたりを想定）
+        let turnRatePer1k = parseFloat(turnRateInput.value);
+
         const hours = parseFloat(hoursInput.value) || 0;
         const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
 
-        if (isNaN(border) || isNaN(turnRate) || border <= 0 || turnRate <= 0) {
+        if (isNaN(borderBase) || isNaN(turnRatePer1k) || borderBase <= 0 || turnRatePer1k <= 0) {
             evDailyDisplay.textContent = '¥0';
             evHourlyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
+            realBorderDisplay.textContent = '-- 回転 / 1k';
+            valuePerSpinDisplay.textContent = '¥0.00';
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = '数値を入力すると自動計算されます。';
@@ -34,48 +111,86 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalSpinsDaily = hours * spinsPerHour;
         totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
 
-        // パチンコの期待値計算（等価交換の簡易計算式）
-        // 1回転あたりの単価 = (250玉 / ボーダー - 250玉 / 回転率) × 4円（等価として）
-        // ※ 1000円=250玉 で計算（4円パチンコ）
+        // --- 3. 期待値計算のコアロジック ---
+        // 1回転回すのに必要な玉数
+        // ボーダー基準での1回転消費玉数
+        const requiredBallsPerSpinBase = 250 / borderBase;
+        // 実測での1回転消費玉数（入力された1000円あたりの回転率から算出）
+        const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
 
-        // 回転率（千円あたり）で割ることで、1回転させるのに必要な玉数を出す
-        const tamasPerSpinBorder = 250 / border;
-        const tamasPerSpinActual = 250 / turnRate;
+        // 1回転あたりの期待「差引玉数」（プラスなら持ち玉が増える、マイナスなら減る）
+        const expectedBallsPerSpin = requiredBallsPerSpinBase - requiredBallsPerSpinActual;
 
-        // 1回転あたりの差引玉数
-        const expectedBallsPerSpin = tamasPerSpinBorder - tamasPerSpinActual;
+        // 交換ギャップを含めた金額期待値の算出
+        // 1回転の価値(円) ＝ 期待玉数 × (持ち玉割合 × 貸出玉単価 ＋ 現金投資割合 × 換金玉単価)
+        // ※「手数料込（非等価）」オフの場合は、常に貸玉単価=換金玉単価として計算(等価扱い)
 
-        // 4円等価と仮定して1回転あたりの金額に換算
-        const valuePerSpin = expectedBallsPerSpin * 4;
+        const investmentPrice = playRate; // 4円、2円、1円
+        const cashoutPrice = hasFee ? valuePerBallCashout : playRate;
+
+        let avgValuePerBall;
+        if (expectedBallsPerSpin >= 0) {
+            // プラス期待値の場合は、最終的に余る玉を換金するので、換金レートの影響を受ける
+            // （厳密シミュレーションではないので、簡易的に加重平均）
+            avgValuePerBall = (ballRatio * cashoutPrice) + ((1 - ballRatio) * cashoutPrice);
+            // ※プラスなら最終的に全部換金なので基本的に cashoutPrice になる
+        } else {
+            // マイナス期待値（追加投資が必要）の場合
+            avgValuePerBall = (ballRatio * cashoutPrice) + ((1 - ballRatio) * investmentPrice);
+        }
+
+        const valuePerSpin = expectedBallsPerSpin * avgValuePerBall;
 
         // 時給と日給
         const hourlyEV = valuePerSpin * spinsPerHour;
         const dailyEV = hourlyEV * hours;
 
-        // 表示の更新
+        // 実質ボーダーラインの算出
+        // 1000円投資したときに、差引金額が0になる回転数を逆算
+        let realBorder;
+        if (hasFee) {
+            // 非等価の場合、現金投資比率が高いほどボーダーは上がる
+            // 一般に実質ボーダー(1000円あたり) = 貸玉数 / (250/等価ボーダー × (現金比率×貸玉単価 + 持ち玉比率×換金単価) / 貸玉単価)
+            const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
+            realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
+            // 4円等価時は borderBase * 4 * 1 = borderBase * 4 となるため、1000円表記に直す
+        } else {
+            // 等価の場合は (250玉ボーダー) × (貸玉数 / 250) = 1000円あたりの回転数
+            realBorder = borderBase * (ballsPer1k / 250);
+        }
+
+
+        // --- 4. 結果表示 ---
         evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
         evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
+        realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
+        valuePerSpinDisplay.textContent = formatCurrency(valuePerSpin);
 
-        // 色の変更
+        // 色とメッセージの更新
         if (dailyEV > 0) {
             evDailyDisplay.className = 'amount positive';
             evHourlyDisplay.className = 'amount positive';
-            noteDisplay.textContent = `ボーダー比 ${((turnRate / border) * 100 - 100).toFixed(1)}% プラスです。`;
+            const diff = turnRatePer1k - realBorder;
+            noteDisplay.textContent = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
         } else if (dailyEV < 0) {
             evDailyDisplay.className = 'amount negative';
             evHourlyDisplay.className = 'amount negative';
-            noteDisplay.textContent = `ボーダーを下回っています。マイナス期待値です。`;
+            const diff = realBorder - turnRatePer1k;
+            noteDisplay.innerHTML = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
         } else {
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
-            noteDisplay.textContent = 'ボーダープラマイゼロです。';
+            noteDisplay.textContent = '期待値プラマイゼロのラインです。';
         }
     }
 
-    borderInput.addEventListener('input', calculateEV);
-    turnRateInput.addEventListener('input', calculateEV);
-    hoursInput.addEventListener('input', calculateEV);
-    spinsPerHourInput.addEventListener('input', calculateEV);
+    // イベントリスナーの一括登録
+    const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculateEV);
+        input.addEventListener('change', calculateEV);
+    });
 
+    // 初期計算
     calculateEV();
 });
