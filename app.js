@@ -47,6 +47,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Preset Machine Logic
+    let machineData = [];
+
+    // Fetch machines data
+    fetch('machines.json')
+        .then(response => response.json())
+        .then(data => {
+            machineData = data;
+            populateMachineSelect();
+        })
+        .catch(error => {
+            console.error('Error loading machines:', error);
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "-- 機種データの読み込みに失敗しました --";
+            machineSelect.appendChild(option);
+        });
+
+    function populateMachineSelect() {
+        machineData.forEach(machine => {
+            const option = document.createElement('option');
+            option.value = machine.border;
+            option.textContent = `${machine.name} (${machine.border})`;
+            machineSelect.appendChild(option);
+        });
+    }
+
     machineSelect.addEventListener('change', (e) => {
         if (e.target.value) {
             borderInput.value = e.target.value;

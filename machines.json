@@ -1,0 +1,50 @@
+[
+    {
+        "id": "eva-咆哮",
+        "name": "新世紀エヴァンゲリオン〜未来への咆哮〜",
+        "border": 16.5,
+        "type": "ミドル"
+    },
+    {
+        "id": "rezero-鬼がかり",
+        "name": "Re:ゼロから始める異世界生活 鬼がかりver",
+        "border": 16.7,
+        "type": "ミドル"
+    },
+    {
+        "id": "gundam-seed",
+        "name": "Pフィーバー機動戦士ガンダムSEED",
+        "border": 17.0,
+        "type": "ミドル"
+    },
+    {
+        "id": "rezero-season2",
+        "name": "e Re:ゼロから始める異世界生活 season2",
+        "border": 17.2,
+        "type": "スマパチ"
+    },
+    {
+        "id": "sea-story-5",
+        "name": "P大海物語5",
+        "border": 17.5,
+        "type": "ミドル"
+    },
+    {
+        "id": "toaru-index2",
+        "name": "Pとある魔術の禁書目録2",
+        "border": 18.0,
+        "type": "ミドル"
+    },
+    {
+        "id": "hokuto-raou",
+        "name": "P北斗の拳 暴凶星",
+        "border": 16.8,
+        "type": "ミドル"
+    },
+    {
+        "id": "eva-15-light",
+        "name": "新世紀エヴァンゲリオン〜未来への咆哮〜 SPECIAL EDITION",
+        "border": 17.2,
+        "type": "ライトミドル"
+    }
+]
