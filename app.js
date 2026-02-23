@@ -413,22 +413,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 : prob;
 
             // === I18相当: 通常持玉単価 ===
-            const i18Result = normalBallUnitPrice >= 0
-                ? ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) / conversionFactor)
-                : ((((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250) * conversionFactor);
+            const rawI18 = (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
+            const i18Result = rawI18 >= 0
+                ? (rawI18 / conversionFactor)
+                : (rawI18 * conversionFactor);
 
             // === I19相当: 現金単価 ===
-            const i19Result = normalCashUnitPrice >= 0
-                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) / conversionFactor
-                : (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) * conversionFactor);
+            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
+            const i19Result = rawI19 >= 0
+                ? (rawI19 / conversionFactor)
+                : (rawI19 * conversionFactor);
 
             // === K18: 遊タイム持玉単価 ===
-            yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
+            yutimeBallUnitPriceResult = i18Result >= 0
                 ? ((i18Result / conversionFactor) * yutimeExpectancy)
                 : ((i18Result * conversionFactor) / yutimeExpectancy);
 
             // === K19: 遊タイム現金単価 ===
-            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
+            yutimeCashUnitPriceResult = i19Result >= 0
                 ? ((i19Result / conversionFactor) * yutimeExpectancy)
                 : ((i19Result * conversionFactor) / yutimeExpectancy);
 
