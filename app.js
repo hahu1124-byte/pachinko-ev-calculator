@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Result Elements
     const evDailyDisplay = document.getElementById('expected-value-daily');
-    const evHourlyDisplay = document.getElementById('expected-value-hourly');
     const totalSpinsDisplay = document.getElementById('total-spins');
     const realBorderDisplay = document.getElementById('real-border');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
@@ -134,13 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         machineData.forEach((machine, index) => {
             // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
-            // gapFactor = (1 * investmentPrice + 0 * cashoutPrice) / cashoutPrice = investmentPrice / cashoutPrice
             const gapFactor = investmentPrice / cashoutPrice;
             const cashBorder = machine.border * gapFactor;
+            const yutimeText = machine.yutimeSpins > 0 ? ` 遊${machine.yutimeSpins}` : '';
 
             const option = document.createElement('option');
             option.value = index;
-            option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})`;
+            option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})${yutimeText}`;
             machineSelect.appendChild(option);
         });
     }
@@ -255,14 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (activeBorderBase <= 0 || isNaN(activeBorderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '¥0';
-            evHourlyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
             realBorderDisplay.textContent = '-- 回転 / 1k';
             valuePerSpinDisplay.textContent = '¥0.00';
             ballEvPerSpinDisplay.textContent = '¥0.00';
             cashEvPerSpinDisplay.textContent = '¥0.00';
             evDailyDisplay.className = 'amount';
-            evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = activeBorderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
             return;
         }
@@ -356,11 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainEV = hasYutime ? yutimeEV : dailyEV;
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
-        // 時間あたりの期待値の代わりに総回転数からの期待値を直接表示
-        // evHourlyDisplay (時給換算) の要素はUI上削除されたが、例外エラーを防ぐためチェックして更新
-        if (evHourlyDisplay) {
-            evHourlyDisplay.parentElement.style.display = 'none'; // 親ごと非表示にしておく
-        }
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
         valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
         ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
@@ -390,21 +382,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // 色とメッセージの更新
         if (mainEV > 0) {
             evDailyDisplay.className = 'amount positive';
-            evHourlyDisplay.className = 'amount positive';
             const diff = turnRatePer1k - realBorder;
             let note = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
             if (hasYutime) note += ` (遊タイム込期待値適用)`;
             noteDisplay.textContent = note;
         } else if (mainEV < 0) {
             evDailyDisplay.className = 'amount negative';
-            evHourlyDisplay.className = 'amount negative';
             const diff = realBorder - turnRatePer1k;
             let note = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
             if (hasYutime) note += ` (遊タイム込)`;
             noteDisplay.innerHTML = note;
         } else {
             evDailyDisplay.className = 'amount';
-            evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = '期待値プラマイゼロのラインです。';
         }
     }
