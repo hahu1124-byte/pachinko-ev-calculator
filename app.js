@@ -323,11 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hasYutime) {
             const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
 
-            // 換算係数 (G18相当: 4 / 交換率)
-            // = 4 / (1000 / exchangeRateBalls) = 4 * exchangeRateBalls / 1000
-            // app.jsでは valuePerBallCashout が「1円あたりの玉数」ベースで計算されているため、
-            // playRate / valuePerBallCashout ではなく、playRate = 4 の時の「4 / 換金価格」を再現する
-            const conversionFactor = (4 / ((1000 / exchangeRateBalls) * (4 / 4))); // 4円あたりの交換率ベースの係数
+            // 換算係数 (G18相当: 4円ベース / 交換価格)
+            // スプレッドシートの G18 = 4 / 交換率(円) = playRate / 1玉あたり换金価格
+            const conversionFactor = playRate / valuePerBallCashout;
 
             // 遊タイム期待度 (G23相当: 天井到達率)
             const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinsRemaining);
@@ -353,7 +351,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // メインの期待値表示：通常と遊タイムの高い方を採用 (遊込表示)
         const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
         // 履歴保存用の単価：通常と遊タイムの高い方を採用
-        const finalValuePerSpin = hasYutime ? Math.max(normalValuePerSpin, yutimeValuePerSpin) : normalValuePerSpin;
+        const finalValuePerSpin = hasYutime && yutimeValuePerSpin > normalValuePerSpin
+            ? yutimeValuePerSpin
+            : normalValuePerSpin;
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
@@ -373,14 +373,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 保存用のデータを一時保持
+        const selectedMachine = machineData[selectedIdx];
         latestCalculation = {
             id: Date.now(),
-            machineName: machineData[selectedIdx] ? machineData[selectedIdx].name + (hasYutime ? " (遊込)" : "") : "手入力台",
+            machineName: selectedMachine ? selectedMachine.name + (hasYutime ? ' (遊込)' : '') : '手入力台',
             playRate: playRate,
             turnRate: turnRatePer1k,
             totalSpinsMeasured: totalSpinsMeasured,
             dailyEV: mainEV,
             valuePerSpin: finalValuePerSpin,
+            ballEv: normalBallUnitPrice,
+            cashEv: normalCashUnitPrice,
             hasYutime: hasYutime,
             yutimeEV: yutimeEV
         };
