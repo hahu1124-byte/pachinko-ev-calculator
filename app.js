@@ -170,6 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return amount < 0 ? `-${formatted}` : `+${formatted}`;
     }
 
+    function formatSpinValue(value) {
+        const absValue = Math.abs(value);
+        const formatted = absValue.toFixed(2);
+        return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
+    }
+
     // Main Calculation
     function calculateEV() {
         // --- 1. 入力値の取得 ---
@@ -357,15 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
 
         // --- 4. 結果表示 ---
-        function formatSpinValue(value) {
-            const absValue = Math.abs(value);
-            const formatted = absValue.toFixed(2);
-            return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
-        }
-
         // 遊タイムがある場合は、通常の期待値と遊タイムの期待値で「高いほう」を採用してメイン表示とする
         const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
-        console.log('calculateEV DEBUG:', { mainEV, dailyEV, yutimeEV, hasYutime, yutimeSpins, primaryProb, activeBorderBase, realBorder, valuePerSpin, turnRatePer1k, totalSpinsMeasured });
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
@@ -469,14 +468,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    renderHistory();
-
-    // イベントリスナーの一括登録
+    // イベントリスナーの一括登録（renderHistoryより前に登録し、クラッシュ時もリアルタイム計算を保証する）
     const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
     inputs.forEach(input => {
         input.addEventListener('input', calculateEV);
         input.addEventListener('change', calculateEV);
     });
+
+    renderHistory();
 
     // 初期計算
     calculateEV();
