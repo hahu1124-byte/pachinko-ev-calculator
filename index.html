@@ -157,12 +157,13 @@
 
                     <div class="result-grid">
                         <div class="result-box ev">
-                            <h3>1日の期待値</h3>
-                            <p class="amount" id="expected-value-daily">¥0</p>
-                        </div>
-                        <div class="result-box hourly">
-                            <h3>時給換算</h3>
-                            <p class="amount" id="expected-value-hourly">¥0</p>
+                            <h3>期待値</h3>
+                            <div
+                                style="display: flex; align-items: baseline; justify-content: center; gap: 1rem; margin-top: 0.5rem;">
+                                <p class="amount" id="expected-value-daily" style="font-size: 2rem; margin: 0;">¥0</p>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">時給換算: <span
+                                        id="expected-value-hourly" style="font-weight: bold;">¥0</span></p>
+                            </div>
                         </div>
                     </div>
 
@@ -190,6 +191,11 @@
                         <div class="stat-item">
                             <span class="stat-label">実質ボーダー (現在条件):</span>
                             <span class="stat-value" id="real-border">-- 回転 / 1k</span>
+                        </div>
+                        <div class="stat-item" id="yutime-ev-row"
+                            style="display: none; border-top: 1px dotted rgba(255,255,255,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
+                            <span class="stat-label" style="color: var(--accent);">遊タイム期待値 (加算分):</span>
+                            <span class="stat-value" id="yutime-ev-only" style="color: var(--accent);">¥0</span>
                         </div>
                     </div>
 

@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteDisplay = document.getElementById('ev-note');
     const yutimeSpinsInput = document.getElementById('yutime-spins');
     const yutimeRbInput = document.getElementById('yutime-rb');
+    const yutimeEvRow = document.getElementById('yutime-ev-row');
+    const yutimeEvOnlyDisplay = document.getElementById('yutime-ev-only');
 
     // History Elements
     const saveHistoryBtn = document.getElementById('save-history-btn');
@@ -329,6 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
         valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
         ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
         cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
+
+        if (hasYutime && yutimeEvRow && yutimeEvOnlyDisplay) {
+            yutimeEvRow.style.display = 'flex';
+            yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV - dailyEV));
+        } else if (yutimeEvRow) {
+            yutimeEvRow.style.display = 'none';
+        }
 
         // 保存用のデータを一時保持
         latestCalculation = {
