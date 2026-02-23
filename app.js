@@ -425,13 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === K18: 遊タイム持玉単価 ===
             yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
-                ? (i18Result * yutimeExpectancy)
-                : (i18Result / yutimeExpectancy);
+                ? ((i18Result / conversionFactor) * yutimeExpectancy)
+                : ((i18Result * conversionFactor) / yutimeExpectancy);
 
             // === K19: 遊タイム現金単価 ===
             yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
-                ? (i19Result * yutimeExpectancy)
-                : (i19Result / yutimeExpectancy);
+                ? ((i19Result / conversionFactor) * yutimeExpectancy)
+                : ((i19Result * conversionFactor) / yutimeExpectancy);
 
             // === J20相当: 遊タイム持玉比率単価 ===
             // J20 = (K18 * 持玉比率) + K19 * (1 - 持玉比率)
