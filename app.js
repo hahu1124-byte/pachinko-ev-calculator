@@ -410,23 +410,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? effectiveProb / (machineAvgChain * 10)
                 : prob;
 
-            // === K18: 遊タイム持玉単価 ===
-            // K18 = IF(J18>=0, J18/G18*G23, J18*G18/G23)
+            // === I18相当: 通常持玉単価 ===
+            // 【通常時の持玉単価が0以上の場合】 通常時の持玉単価 / 換算係数
+            // 【通常時の持玉単価が0未満の場合】 通常時の持玉単価 * 換算係数
             yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
-                ? (normalBallUnitPrice / conversionFactor * yutimeExpectancy)
-                : (normalBallUnitPrice * conversionFactor / yutimeExpectancy);
+                ? (normalBallUnitPrice / conversionFactor)
+                : (normalBallUnitPrice * conversionFactor);
+
+            // === I19相当: 現金単価 ===
+            // 【通常時の現金単価が0以上の場合】 通常時の現金単価 / 換算係数
+            // 【通常時の現金単価が0未満の場合】 通常時の現金単価 * 換算係数
+            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
+                ? (normalCashUnitPrice / conversionFactor)
+                : (normalCashUnitPrice * conversionFactor);
+
+            // === K18: 遊タイム持玉単価 ===
+            const k18Result = normalBallUnitPrice >= 0
+                ? (yutimeBallUnitPriceResult * yutimeExpectancy)
+                : (yutimeBallUnitPriceResult / yutimeExpectancy);
 
             // === K19: 遊タイム現金単価 ===
-            // K19 = IF(J19>=0, J19/G18*G23, J19*G18/G23)
-            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
-                ? (normalCashUnitPrice / conversionFactor * yutimeExpectancy)
-                : (normalCashUnitPrice * conversionFactor / yutimeExpectancy);
+            const k19Result = normalCashUnitPrice >= 0
+                ? (yutimeCashUnitPriceResult * yutimeExpectancy)
+                : (yutimeCashUnitPriceResult / yutimeExpectancy);
 
-            // === J20: 持玉比率単価 ===
-            // J20 = K18×持玉比率 + K19×(1-持玉比率)
-            yutimeValuePerSpin = (yutimeBallUnitPriceResult * ballRatio) + (yutimeCashUnitPriceResult * (1 - ballRatio));
+            // === J20相当: 遊タイム持玉比率単価 ===
+            // J20 = (K18 * 持玉比率) + K19 * (1 - 持玉比率)
+            yutimeValuePerSpin = (k18Result * ballRatio) + (k19Result * (1 - ballRatio));
 
-            // 遊タイム期待値 = 遊タイム持玉比率単価 × 総回転数
+            // 遊タイム期待値 = 遊タイム持玉比率単価 * 総実測回転数
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
         }
 
