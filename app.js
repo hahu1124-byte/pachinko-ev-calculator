@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const primaryProbs = rows[1]; // 大当たり確率
             const rbs = rows[2];
             const probs = rows[4]; // トータル確率
-            const yutimes = rows[6]; // 遊タイム突入回転数
+            const yutimes = rows[5]; // 遊タイム突入回転数 (Excelの6行目はindex 5)
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
