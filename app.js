@@ -122,8 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     function populateMachineSelect() {
-        // Clear existing options except the first one
-        machineSelect.innerHTML = '<option value="">-- 機種を選択するか直接入力 --</option>';
+        const previousSelection = machineSelect.value;
+        // 機種情報をリセット（「直接入力」の古いプレースホルダーを完全に廃止し即時計算を活性化）
+        machineSelect.innerHTML = '';
 
         const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
         let exchangeRateBalls = exchangeRateSelect.value === 'custom'
@@ -145,6 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})${yutimeText}`;
             machineSelect.appendChild(option);
         });
+
+        // 過去の選択状態を復元、なければ先頭の機種を自動選択し、未選択による計算エラー（反映されない問題）を防止する
+        if (previousSelection !== "" && previousSelection !== null && machineData[previousSelection]) {
+            machineSelect.value = previousSelection;
+        } else if (machineData.length > 0) {
+            machineSelect.value = 0;
+        }
+
+        calculateEV();
     }
 
     // 再計算時や設定変更時にリストの表示（現金ボーダー）も更新する
@@ -338,11 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeEvCash = reachProb * yutimeExpectedBalls * cashoutPrice - (yutimeSpins * requiredBallsPerSpinActual * (investmentPrice - cashoutPrice));
 
             // J14: 遊タイム期待値 (持玉比率単価) = 等価 × 持ち玉比率 + 現金 × 現金比率 
-            // ※スプレッドシートの期待値合算に合わせる
-            yutimeBonusEV = (yutimeEvEq * ballRatio) + (yutimeEvCash * (1 - ballRatio));
-
-            // 通常の期待値に遊タイム分の期待値を上乗せする
-            yutimeEV = dailyEV + yutimeBonusEV;
+            // （※このブロック単体の期待値として独立させる）
+            yutimeEV = (yutimeEvEq * ballRatio) + (yutimeEvCash * (1 - ballRatio));
         }
 
         // 実質ボーダーラインの算出
@@ -356,7 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
         }
 
-        const mainEV = hasYutime ? yutimeEV : dailyEV;
+        // 遊タイムがある場合は、通常の期待値と遊タイムの期待値で「高いほう」を採用してメイン表示とする
+        const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
         console.log('calculateEV DEBUG:', { mainEV, dailyEV, yutimeEV, hasYutime, yutimeSpins, primaryProb, activeBorderBase, realBorder, valuePerSpin, turnRatePer1k, totalSpinsMeasured });
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
@@ -367,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (hasYutime && yutimeEvRow && yutimeEvOnlyDisplay) {
             yutimeEvRow.style.display = 'flex';
-            yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV - dailyEV));
+            yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV));
         } else if (yutimeEvRow) {
             yutimeEvRow.style.display = 'none';
         }
