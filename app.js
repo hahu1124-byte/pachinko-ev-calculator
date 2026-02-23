@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const startBallsInput = document.getElementById('start-balls');
     const currentBallsInput = document.getElementById('current-balls');
     const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
+    const bonusRoundsInput = document.getElementById('bonus-rounds');
+    const afterBonusBallsInput = document.getElementById('after-bonus-balls');
+    const measuredRbDisplay = document.getElementById('measured-rb');
     const hoursInput = document.getElementById('hours');
     const spinsPerHourInput = document.getElementById('spins-per-hour');
 
@@ -101,14 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const investmentPrice = playRate;
         const cashoutPrice = (1000 / exchangeRateBalls) * (playRate / 4);
 
-        machineData.forEach(machine => {
+        machineData.forEach((machine, index) => {
             // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
             // gapFactor = (1 * investmentPrice + 0 * cashoutPrice) / cashoutPrice = investmentPrice / cashoutPrice
             const gapFactor = investmentPrice / cashoutPrice;
             const cashBorder = machine.border * gapFactor;
 
             const option = document.createElement('option');
-            option.value = machine.border;
+            option.value = index;
             option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})`;
             machineSelect.appendChild(option);
         });
@@ -148,7 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
 
         // --- 2. 機種・ベースデータの取得 ---
-        const borderBase = parseFloat(machineSelect.value) || 0; // 機種リストから直接取得
+        let borderBase = 0;
+        let prob = 0;
+        let defaultRb = 0;
+
+        const selectedIdx = machineSelect.value;
+        if (selectedIdx !== "" && machineData[selectedIdx]) {
+            const machine = machineData[selectedIdx];
+            borderBase = machine.border;
+            prob = machine.prob;
+            defaultRb = machine.rb;
+        }
 
         // 実戦データからの回転率計算
         const startSpin = parseFloat(startSpinInput.value) || 0;
@@ -185,7 +198,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const hours = parseFloat(hoursInput.value) || 0;
         const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
 
-        if (borderBase <= 0 || isNaN(borderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
+        // 実測1R出玉の計算
+        const bonusRounds = parseFloat(bonusRoundsInput.value) || 0;
+        const afterBonusBalls = parseFloat(afterBonusBallsInput.value) || 0;
+
+        let measuredRb = 0;
+        if (bonusRounds > 0 && afterBonusBalls > 0) {
+            // 当たり後の玉数 - 現在の玉数 = 獲得出玉
+            const acquiredBalls = afterBonusBalls - currentBalls;
+            measuredRb = acquiredBalls / bonusRounds;
+        }
+
+        if (measuredRb > 0) {
+            measuredRbDisplay.textContent = `${measuredRb.toFixed(2)} 玉`;
+        } else {
+            measuredRbDisplay.textContent = '-- 玉';
+        }
+
+        // もし実測1R出玉があれば、等価ボーダーラインをそれで再計算する
+        let activeBorderBase = borderBase;
+        if (measuredRb > 0 && prob > 0) {
+            // 実測1R出玉(measuredRb) × トータル確率(prob) = 新しい仮定RB相当
+            activeBorderBase = 250 / (measuredRb / prob);
+        }
+
+        if (activeBorderBase <= 0 || isNaN(activeBorderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '¥0';
             evHourlyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
@@ -195,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cashEvPerSpinDisplay.textContent = '¥0.00';
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
-            noteDisplay.textContent = borderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
+            noteDisplay.textContent = activeBorderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
             return;
         }
 
@@ -205,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 3. 期待値計算のコアロジック ---
         // 1回転回すのに必要な玉数
         // ボーダー基準での1回転消費玉数
-        const requiredBallsPerSpinBase = 250 / borderBase;
+        const requiredBallsPerSpinBase = 250 / activeBorderBase;
         // 実測での1回転消費玉数（入力された1000円あたりの回転率から算出）
         const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
 
@@ -237,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 実質ボーダーラインの算出
         const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
-        const realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
+        const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
 
         // --- 4. 結果表示 ---
         function formatSpinValue(value) {
