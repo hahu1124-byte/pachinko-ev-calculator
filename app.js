@@ -63,87 +63,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Preset Machine Logic
     let machineData = [];
 
-    // Google Sheets CSV URL
-    const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
-
-    // Fetch machines data from Google Sheets CSV
-    // 引用符付きCSVを正しくパースする関数 (セル内改行・カンマ対応)
-    function parseCsv(text) {
-        const rows = [];
-        let row = [];
-        let cell = '';
-        let inQuotes = false;
-        for (let i = 0; i < text.length; i++) {
-            const c = text[i];
-            if (inQuotes) {
-                if (c === '"' && text[i + 1] === '"') {
-                    cell += '"';
-                    i++;
-                } else if (c === '"') {
-                    inQuotes = false;
-                } else {
-                    cell += c;
-                }
-            } else {
-                if (c === '"') {
-                    inQuotes = true;
-                } else if (c === ',') {
-                    row.push(cell);
-                    cell = '';
-                } else if (c === '\n' || (c === '\r' && text[i + 1] === '\n')) {
-                    if (c === '\r') i++;
-                    row.push(cell);
-                    cell = '';
-                    rows.push(row);
-                    row = [];
-                } else if (c === '\r') {
-                    row.push(cell);
-                    cell = '';
-                    rows.push(row);
-                    row = [];
-                } else {
-                    cell += c;
-                }
-            }
-        }
-        if (cell || row.length > 0) {
-            row.push(cell);
-            rows.push(row);
-        }
-        return rows;
-    }
-
-    fetch(sheetCsvUrl)
+    // Fetch machines data from Google Sheets using the Visualization API (JSON output)
+    const jsonUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_796u4Jr47n-XPfoOJIMbl3D0/gviz/tq?tqx=out:json&gid=493752965';
+    fetch(jsonUrl)
         .then(response => response.text())
-        .then(csvText => {
-            const rows = parseCsv(csvText);
-
-            // CSV Rows:
-            // 0: "", "Machine 1", "Machine 2"...
-            // 1: "大当たり確率", ...
-            // 2: "仮定RB", ...
-            // 3: "遊抜けor右打ち継続率", ...
-            // 4: "トータル確率", ...
-            // 5: "遊タイム突入回転数", ...
-            // 10: "平均連荘", ...
-            // 15: "遊タイム回数", ...
-
+        .then(text => {
+            // The response is wrapped like: google.visualization.Query.setResponse({...});
+            const jsonStr = text.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, '');
+            const data = JSON.parse(jsonStr);
+            // Extract rows as arrays of cell values
+            const rows = data.table.rows.map(r => r.c.map(c => (c && c.v !== undefined) ? c.v : ''));
+            // Expected layout: row 0 = machine names, row 1 = 大当たり確率, row 2 = 仮定RB, row 3 = 遊抜けor右打ち継続率, row 4 = トータル確率, row 5 = 遊タイム突入回転数, row 10 = 平均連荘, row 15 = 遊タイム回数
             const names = rows[0];
-            const primaryProbs = rows[1]; // 大当たり確率
+            const primaryProbs = rows[1];
             const rbs = rows[2];
-            const yutimeRbs = rows[3]; // 遊タイム中 期待獲得R数
-            const probs = rows[4]; // トータル確率
-            const yutimes = rows[5]; // 遊タイム突入回転数 (Excelの6行目はindex 5)
-            const avgChains = rows.length > 10 ? rows[10] : null; // 平均連荘 (11行目, index 10)
-            const yutimeSpinCounts = rows.length > 15 ? rows[15] : null; // 遊タイム回数 (16行目, index 15)
-
-            console.log('CSV rows loaded:', rows.length, 'avgChains row:', avgChains ? avgChains[0] : 'N/A', 'yutimeSpinCounts row:', yutimeSpinCounts ? yutimeSpinCounts[0] : 'N/A');
+            const yutimeRbs = rows[3];
+            const probs = rows[4];
+            const yutimes = rows[5];
+            const avgChains = rows.length > 10 ? rows[10] : null;
+            const yutimeSpinCounts = rows.length > 15 ? rows[15] : null;
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
-                const name = names[i] ? names[i].trim() : "";
+                const name = names[i] ? String(names[i]).trim() : '';
                 if (!name) continue;
-
                 const primaryProb = parseFloat(primaryProbs[i]);
                 const rb = parseFloat(rbs[i]);
                 const prob = parseFloat(probs[i]);
@@ -151,40 +94,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 const yutimeRbMulti = parseFloat(yutimeRbs[i]) || 0;
                 const avgChain = (avgChains && avgChains[i]) ? parseFloat(avgChains[i]) || 0 : 0;
                 const yutimeSpinCount = (yutimeSpinCounts && yutimeSpinCounts[i]) ? parseFloat(yutimeSpinCounts[i]) || 0 : 0;
-
                 if (rb > 0 && prob > 0) {
-                    // 等価ボーダー = 250 / (仮定RB / トータル確率)
                     const border = 250 / (rb / prob);
                     machineData.push({
-                        name: name,
-                        border: border,
-                        prob: prob,
-                        primaryProb: primaryProb,
-                        rb: rb,
+                        name,
+                        border,
+                        prob,
+                        primaryProb,
+                        rb,
                         yutimeSpins: yutimeSpinLimit,
                         yutimeRb: yutimeRbMulti,
-                        avgChain: avgChain,
-                        yutimeSpinCount: yutimeSpinCount
+                        avgChain,
+                        yutimeSpinCount
                     });
                 }
             }
             populateMachineSelect();
         })
         .catch(error => {
-            console.error('Error loading machines CSV (CORS likely blocked local access):', error);
-            // ローカル実行時など、CORSエラーで取得できない場合のフォールバックデータ
+            console.error('Error loading machines JSON:', error);
+            // Fallback sample data
             machineData = [
                 { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23, avgChain: 3.011, yutimeSpinCount: 350 },
                 { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 },
                 { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 }
             ];
-
             const option = document.createElement('option');
             option.value = "";
             option.textContent = "-- 通信エラー: サンプル機種データを読み込みました --";
             option.disabled = true;
             machineSelect.appendChild(option);
-
             populateMachineSelect();
         });
 
