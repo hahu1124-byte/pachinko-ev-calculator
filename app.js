@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // History Elements
     const saveHistoryBtn = document.getElementById('save-history-btn');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const deleteAllBtn = document.getElementById('delete-all-btn');
     const historyList = document.getElementById('history-list');
     const historyTotalEv = document.getElementById('history-total-ev');
     const historyAvgBallEv = document.getElementById('history-avg-ball-ev');
@@ -481,9 +482,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id')));
 
             if (idsToDelete.length > 0) {
-                historyData = historyData.filter(item => !idsToDelete.includes(item.id));
+                if (confirm('選択した履歴を削除しますか？')) {
+                    historyData = historyData.filter(item => !idsToDelete.includes(item.id));
+                    localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
+                    renderHistory();
+                }
+            } else {
+                alert('削除する項目を選択してください。');
+            }
+        });
+    }
+
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', () => {
+            if (historyData.length === 0) {
+                alert('削除する履歴がありません。');
+                return;
+            }
+            if (confirm('すべての履歴を削除してもよろしいですか？')) {
+                historyData = [];
                 localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
                 renderHistory();
+                alert('すべての履歴を削除しました。');
             }
         });
     }

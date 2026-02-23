@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>パチンコ期待値計算ツール</title>
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=7">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
@@ -187,8 +187,12 @@
             <aside class="history-column card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin-bottom: 0;">保存済み履歴</h2>
-                    <button type="button" id="delete-selected-btn"
-                        style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択した項目を削除</button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="delete-selected-btn"
+                            style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
+                        <button type="button" id="delete-all-btn"
+                            style="padding: 0.5rem 1rem; background: #7f1d1d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全削除</button>
+                    </div>
                 </div>
 
                 <div class="history-summary"
@@ -212,7 +216,7 @@
             <p>&copy; 2026 パチンコ期待値計算ツール</p>
         </footer>
     </div>
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 
 </html>
