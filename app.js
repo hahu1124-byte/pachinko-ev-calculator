@@ -48,6 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateEV();
     });
 
+    // イベントリスナーの一括登録を最優先で実行（後続の処理が失敗しても更新機能は生かす）
+    const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculateEV);
+        input.addEventListener('change', calculateEV);
+    });
+
     calculateEV();
 
     // Preset Machine Logic
@@ -410,47 +417,60 @@ document.addEventListener('DOMContentLoaded', () => {
             evDailyDisplay.className = 'amount';
             noteDisplay.textContent = '期待値プラマイゼロのラインです。';
         }
+        console.log('Calculation complete. latestCalculation updated:', latestCalculation.id);
     }
 
     function renderHistory() {
         if (!historyList) return;
-        historyList.innerHTML = '';
-        let totalEv = 0;
-        let totalBallEv = 0;
+        try {
+            historyList.innerHTML = '';
+            let totalEv = 0;
+            let totalBallEv = 0;
 
-        historyData.forEach((item, index) => {
-            totalEv += item.dailyEV;
-            totalBallEv += (item.valuePerSpin || item.ballEv || 0);
+            historyData.forEach((item, index) => {
+                totalEv += (item.dailyEV || 0);
+                totalBallEv += (item.valuePerSpin || item.ballEv || 0);
 
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
-                <div class="history-item-header">
-                    <h4>${item.machineName} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate}円)</span></h4>
-                    <input type="checkbox" class="history-checkbox" data-id="${item.id}">
-                </div>
-                <div class="history-item-body">
-                    <p><span>回転率:</span> <span>${item.turnRate.toFixed(2)} / 1k (${item.totalSpinsMeasured}回転)</span></p>
-                    <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
-                    <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${item.dailyEV >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV))}</span></p>
-                </div>
-            `;
-            historyList.appendChild(div);
-        });
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-item-header">
+                        <h4>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></h4>
+                        <input type="checkbox" class="history-checkbox" data-id="${item.id}">
+                    </div>
+                    <div class="history-item-body">
+                        <p><span>回転率:</span> <span>${(item.turnRate || 0).toFixed(2)} / 1k (${item.totalSpinsMeasured || 0}回転)</span></p>
+                        <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
+                        <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
+                    </div>
+                `;
+                historyList.appendChild(div);
+            });
 
-        if (historyTotalEv) historyTotalEv.textContent = formatCurrency(Math.round(totalEv));
-        if (historyAvgBallEv) {
-            const avg = historyData.length > 0 ? (totalBallEv / historyData.length) : 0;
-            historyAvgBallEv.textContent = `¥${avg.toFixed(2)}`;
+            if (historyTotalEv) historyTotalEv.textContent = formatCurrency(Math.round(totalEv));
+            if (historyAvgBallEv) {
+                const avg = historyData.length > 0 ? (totalBallEv / historyData.length) : 0;
+                historyAvgBallEv.textContent = `¥${avg.toFixed(2)}`;
+            }
+        } catch (e) {
+            console.error('History Rendering Error:', e);
         }
     }
 
     if (saveHistoryBtn) {
         saveHistoryBtn.addEventListener('click', () => {
             if (latestCalculation) {
-                historyData.push(latestCalculation);
-                localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
-                renderHistory();
+                try {
+                    historyData.push(latestCalculation);
+                    localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
+                    renderHistory();
+                    alert('保存しました！');
+                } catch (e) {
+                    console.error('Save to History Error:', e);
+                    alert('保存に失敗しました。ブラウザの保存容量がいっぱいかもしれません。');
+                }
+            } else {
+                alert('実戦データを入力して期待値を計算してから保存してください。');
             }
         });
     }
@@ -467,13 +487,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // イベントリスナーの一括登録（renderHistoryより前に登録し、クラッシュ時もリアルタイム計算を保証する）
-    const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
-    inputs.forEach(input => {
-        input.addEventListener('input', calculateEV);
-        input.addEventListener('change', calculateEV);
-    });
 
     renderHistory();
 
