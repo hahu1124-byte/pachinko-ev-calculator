@@ -26,6 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
     const noteDisplay = document.getElementById('ev-note');
+    const yutimeSpinsInput = document.getElementById('yutime-spins');
+    const yutimeRbInput = document.getElementById('yutime-rb');
+
+    // History Elements
+    const saveHistoryBtn = document.getElementById('save-history-btn');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const historyList = document.getElementById('history-list');
+    const historyTotalEv = document.getElementById('history-total-ev');
+    const historyAvgBallEv = document.getElementById('history-avg-ball-ev');
+
+    let historyData = JSON.parse(localStorage.getItem('pachinkoHistory')) || [];
+    let latestCalculation = null;
 
     // UI Toggle Logic
     exchangeRateSelect.addEventListener('change', (e) => {
@@ -272,6 +284,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const hourlyEV = valuePerSpin * spinsPerHour;
         const dailyEV = hourlyEV * hours;
 
+        // 遊タイム期待値算出 (簡易版)
+        let yutimeEV = 0;
+        const yutimeSpins = parseFloat(yutimeSpinsInput.value) || 0;
+        const yutimeRb = parseFloat(yutimeRbInput.value) || 0;
+        let hasYutime = false;
+
+        if (yutimeSpins > 0 && yutimeRb > 0 && prob > 0) {
+            hasYutime = true;
+            // 天井到達率 = (1 - 1/大当たり確率) ^ 残り回転数
+            const reachProb = Math.pow(1 - (1 / prob), yutimeSpins);
+            // 天井到達時の獲得期待玉数
+            const yutimeExpectedBalls = yutimeRb * (measuredRb > 0 ? measuredRb : defaultRb);
+            // 天井到達によるプラス期待値分 = 到達率 × 獲得期待玉数 × 換金率
+            const yutimeBonusEV = reachProb * yutimeExpectedBalls * cashoutPrice;
+
+            // 通常の期待値に遊タイム分の期待値を上乗せする方針
+            yutimeEV = dailyEV + yutimeBonusEV;
+        }
+
         // 実質ボーダーラインの算出
         const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
         const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
@@ -291,23 +322,103 @@ document.addEventListener('DOMContentLoaded', () => {
         cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
 
 
+        // 保存用のデータを一時保持
+        latestCalculation = {
+            id: Date.now(),
+            machineName: machineData[selectedIdx] ? machineData[selectedIdx].name : "手入力台",
+            playRate: playRate,
+            investCashK: investCashK,
+            turnRate: turnRatePer1k,
+            dailyEV: (hasYutime ? yutimeEV : dailyEV),
+            ballEv: ballEvPerSpin,
+            hasYutime: hasYutime,
+            yutimeEV: yutimeEV
+        };
+
         // 色とメッセージの更新
-        if (dailyEV > 0) {
+        const mainEV = hasYutime ? yutimeEV : dailyEV;
+        if (mainEV > 0) {
             evDailyDisplay.className = 'amount positive';
             evHourlyDisplay.className = 'amount positive';
             const diff = turnRatePer1k - realBorder;
-            noteDisplay.textContent = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
-        } else if (dailyEV < 0) {
+            let note = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
+            if (hasYutime) note += ` (遊タイム込期待値適用)`;
+            noteDisplay.textContent = note;
+        } else if (mainEV < 0) {
             evDailyDisplay.className = 'amount negative';
             evHourlyDisplay.className = 'amount negative';
             const diff = realBorder - turnRatePer1k;
-            noteDisplay.innerHTML = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
+            let note = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
+            if (hasYutime) note += ` (遊タイム込)`;
+            noteDisplay.innerHTML = note;
         } else {
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = '期待値プラマイゼロのラインです。';
         }
+
+        if (hasYutime) {
+            evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
+        }
     }
+
+    function renderHistory() {
+        if (!historyList) return;
+        historyList.innerHTML = '';
+        let totalEv = 0;
+        let totalBallEv = 0;
+
+        historyData.forEach((item, index) => {
+            totalEv += item.dailyEV;
+            totalBallEv += item.ballEv;
+
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div class="history-item-header">
+                    <h4>${item.machineName} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate}円)</span></h4>
+                    <input type="checkbox" class="history-checkbox" data-id="${item.id}">
+                </div>
+                <div class="history-item-body">
+                    <p><span>回転率:</span> <span>${item.turnRate.toFixed(2)} / 1k</span></p>
+                    <p><span>持玉単価:</span> <span>¥${item.ballEv.toFixed(2)}</span></p>
+                    <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${item.dailyEV >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV))}</span></p>
+                </div>
+            `;
+            historyList.appendChild(div);
+        });
+
+        if (historyTotalEv) historyTotalEv.textContent = formatCurrency(Math.round(totalEv));
+        if (historyAvgBallEv) {
+            const avg = historyData.length > 0 ? (totalBallEv / historyData.length) : 0;
+            historyAvgBallEv.textContent = `¥${avg.toFixed(2)}`;
+        }
+    }
+
+    if (saveHistoryBtn) {
+        saveHistoryBtn.addEventListener('click', () => {
+            if (latestCalculation) {
+                historyData.push(latestCalculation);
+                localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
+                renderHistory();
+            }
+        });
+    }
+
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.history-checkbox:checked');
+            const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id')));
+
+            if (idsToDelete.length > 0) {
+                historyData = historyData.filter(item => !idsToDelete.includes(item.id));
+                localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
+                renderHistory();
+            }
+        });
+    }
+
+    renderHistory();
 
     // イベントリスナーの一括登録
     const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
