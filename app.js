@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const customExchangeInput = document.getElementById('custom-exchange');
 
     const machineSelect = document.getElementById('machine-select');
-    const borderInput = document.getElementById('border');
     const startSpinInput = document.getElementById('start-spin');
     const currentSpinInput = document.getElementById('current-spin');
     const investCashInput = document.getElementById('invest-cash');
-    const investBallsInput = document.getElementById('invest-balls');
+    const startBallsInput = document.getElementById('start-balls');
+    const currentBallsInput = document.getElementById('current-balls');
     const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
     const hoursInput = document.getElementById('hours');
     const spinsPerHourInput = document.getElementById('spins-per-hour');
@@ -35,248 +35,250 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     calculateEV();
-});
 
-// Preset Machine Logic
-let machineData = [];
+    // Preset Machine Logic
+    let machineData = [];
 
-// Google Sheets CSV URL
-const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
+    // Google Sheets CSV URL
+    const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
 
-// Fetch machines data from Google Sheets CSV
-fetch(sheetCsvUrl)
-    .then(response => response.text())
-    .then(csvText => {
-        const rows = csvText.split('\n').map(row => row.split(','));
+    // Fetch machines data from Google Sheets CSV
+    fetch(sheetCsvUrl)
+        .then(response => response.text())
+        .then(csvText => {
+            const rows = csvText.split('\n').map(row => row.split(','));
 
-        // CSV Rows:
-        // 0: "", "Machine 1", "Machine 2"...
-        // 1: "大当たり確率", ...
-        // 2: "仮定RB", ...
-        // 3: "遊抜けor右打ち継続率", ...
-        // 4: "トータル確率", ...
+            // CSV Rows:
+            // 0: "", "Machine 1", "Machine 2"...
+            // 1: "大当たり確率", ...
+            // 2: "仮定RB", ...
+            // 3: "遊抜けor右打ち継続率", ...
+            // 4: "トータル確率", ...
 
-        const names = rows[0];
-        const rbs = rows[2];
-        const probs = rows[4];
+            const names = rows[0];
+            const rbs = rows[2];
+            const probs = rows[4];
 
-        machineData = [];
-        for (let i = 1; i < names.length; i++) {
-            const name = names[i] ? names[i].trim() : "";
-            if (!name) continue;
+            machineData = [];
+            for (let i = 1; i < names.length; i++) {
+                const name = names[i] ? names[i].trim() : "";
+                if (!name) continue;
 
-            const rb = parseFloat(rbs[i]);
-            const prob = parseFloat(probs[i]);
+                const rb = parseFloat(rbs[i]);
+                const prob = parseFloat(probs[i]);
 
-            if (rb > 0 && prob > 0) {
-                // 等価ボーダー = 250 / (仮定RB / トータル確率)
-                const border = 250 / (rb / prob);
-                machineData.push({
-                    name: name,
-                    border: border,
-                    prob: prob,
-                    rb: rb
-                });
+                if (rb > 0 && prob > 0) {
+                    // 等価ボーダー = 250 / (仮定RB / トータル確率)
+                    const border = 250 / (rb / prob);
+                    machineData.push({
+                        name: name,
+                        border: border,
+                        prob: prob,
+                        rb: rb
+                    });
+                }
+            }
+            populateMachineSelect();
+        })
+        .catch(error => {
+            console.error('Error loading machines CSV:', error);
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "-- 機種データの読み込みに失敗しました --";
+            machineSelect.appendChild(option);
+        });
+
+    function populateMachineSelect() {
+        // Clear existing options except the first one
+        machineSelect.innerHTML = '<option value="">-- 機種を選択するか直接入力 --</option>';
+
+        const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
+        let exchangeRateBalls = exchangeRateSelect.value === 'custom'
+            ? parseFloat(customExchangeInput.value)
+            : parseFloat(exchangeRateSelect.value);
+
+        // 貸玉単価と換金単価
+        const investmentPrice = playRate;
+        const cashoutPrice = (1000 / exchangeRateBalls) * (playRate / 4);
+
+        machineData.forEach(machine => {
+            // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
+            // gapFactor = (1 * investmentPrice + 0 * cashoutPrice) / cashoutPrice = investmentPrice / cashoutPrice
+            const gapFactor = investmentPrice / cashoutPrice;
+            const cashBorder = machine.border * gapFactor;
+
+            const option = document.createElement('option');
+            option.value = machine.border;
+            option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})`;
+            machineSelect.appendChild(option);
+        });
+    }
+
+    // 再計算時や設定変更時にリストの表示（現金ボーダー）も更新する
+    exchangeRateSelect.addEventListener('change', populateMachineSelect);
+    playRateRadios.forEach(radio => radio.addEventListener('change', populateMachineSelect));
+
+    machineSelect.addEventListener('change', calculateEV);
+
+    // Utilities
+    function formatCurrency(amount) {
+        const absAmount = Math.abs(amount);
+        const formatted = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(absAmount);
+        return amount < 0 ? `-${formatted}` : `+${formatted}`;
+    }
+
+    // Main Calculation
+    function calculateEV() {
+        // --- 1. 入力値の取得 ---
+        const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
+        const ballsPer1k = 1000 / playRate; // 4円=250玉, 2円=500玉, 1円=1000玉
+
+        let exchangeRateBalls = exchangeRateSelect.value === 'custom'
+            ? parseFloat(customExchangeInput.value)
+            : parseFloat(exchangeRateSelect.value);
+
+        // "1000円あたりの交換玉数" を "1玉あたりの換金単価"に直す (例: 250玉 -> 4.0 , 280玉 -> 約3.57)
+        // 4円設定の時: 1000 / 250 = 4.0円/玉
+        // 1円設定の時は入力欄の「玉数」基準が変わるため、比率で計算
+        // （一般的な非等価表記に合わせるため、入力された「1000円あたりの玉数(4円相当)」から基準単価を出す）
+
+        // ユーザーが選ぶ交換率（250枠/280枠など）は基本的に「4円パチンコ換算での玉数」として扱う方が直感的
+        // なので、1玉の価値 = (1000(円) / 交換率玉数) × (貸玉レート / 4) とする
+        // 例: 1円パチンコ、等価(250選択) -> (1000/250) * (1/4) = 4 * 0.25 = 1.0円/玉
+        let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
+
+        // --- 2. 機種・ベースデータの取得 ---
+        const borderBase = parseFloat(machineSelect.value) || 0; // 機種リストから直接取得
+
+        // 実戦データからの回転率計算
+        const startSpin = parseFloat(startSpinInput.value) || 0;
+        const currentSpin = parseFloat(currentSpinInput.value) || 0;
+        const investCashK = parseFloat(investCashInput.value) || 0;
+        const startBalls = parseFloat(startBallsInput.value) || 0;
+        const currentBalls = parseFloat(currentBallsInput.value) || 0;
+
+        const totalSpinsMeasured = currentSpin - startSpin;
+
+        // 投資額と持ち玉比率の計算
+        const cashInvestedYen = investCashK * 1000;
+        const usedBalls = startBalls - currentBalls;
+        const totalInvestedYen = cashInvestedYen + (usedBalls * playRate);
+
+        let ballRatio = 1.0;
+        if (totalInvestedYen > 0) {
+            const positiveBallsYen = Math.max(0, usedBalls * playRate);
+            if (cashInvestedYen + positiveBallsYen > 0) {
+                ballRatio = positiveBallsYen / (cashInvestedYen + positiveBallsYen);
+            } else {
+                ballRatio = 1.0;
             }
         }
-        populateMachineSelect();
-    })
-    .catch(error => {
-        console.error('Error loading machines CSV:', error);
-        const option = document.createElement('option');
-        option.value = "";
-        option.textContent = "-- 機種データの読み込みに失敗しました --";
-        machineSelect.appendChild(option);
+
+        let turnRatePer1k = 0;
+        if (totalInvestedYen > 0) {
+            // 1000円あたりの回転数 = (総回転数 / 総投資額) * 1000
+            turnRatePer1k = (totalSpinsMeasured / totalInvestedYen) * 1000;
+        }
+
+        measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
+
+        const hours = parseFloat(hoursInput.value) || 0;
+        const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
+
+        if (borderBase <= 0 || isNaN(borderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
+            evDailyDisplay.textContent = '¥0';
+            evHourlyDisplay.textContent = '¥0';
+            totalSpinsDisplay.textContent = '0 回転';
+            realBorderDisplay.textContent = '-- 回転 / 1k';
+            valuePerSpinDisplay.textContent = '¥0.00';
+            ballEvPerSpinDisplay.textContent = '¥0.00';
+            cashEvPerSpinDisplay.textContent = '¥0.00';
+            evDailyDisplay.className = 'amount';
+            evHourlyDisplay.className = 'amount';
+            noteDisplay.textContent = borderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
+            return;
+        }
+
+        const totalSpinsDaily = hours * spinsPerHour;
+        totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
+
+        // --- 3. 期待値計算のコアロジック ---
+        // 1回転回すのに必要な玉数
+        // ボーダー基準での1回転消費玉数
+        const requiredBallsPerSpinBase = 250 / borderBase;
+        // 実測での1回転消費玉数（入力された1000円あたりの回転率から算出）
+        const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
+
+        // 1回転あたりの期待「差引玉数」（プラスなら持ち玉が増える、マイナスなら減る）
+        // スプレッドシート式: 期待玉数 = ボーダー基準1回転の消費玉数 - 実測1回転の消費玉数
+        const expectedBallsPerSpin = requiredBallsPerSpinBase - requiredBallsPerSpinActual;
+
+        // 交換ギャップを含めた金額期待値の算出
+        const investmentPrice = playRate; // 4円、2円、1円
+        const cashoutPrice = valuePerBallCashout;
+
+        // 持玉単価 (1回転)
+        // = 期待差引玉数 × 換金価格（※手数料なしなら貸玉と同じ）
+        // スプレッドシート式: 持ち玉単価 = 期待玉数 × (等価時の単価)
+        const ballEvPerSpin = expectedBallsPerSpin * cashoutPrice;
+
+        // 現金単価 (1回転)
+        // = 持玉単価 - 実測1回転の消費玉数 × 換金ギャップ(貸玉価格 - 換金価格)
+        // スプレッドシート式: 現金単価 = 持玉単価 - ( 250 / 回転率 ) × ( 4円 - 換金等価 )
+        const cashEvPerSpin = expectedBallsPerSpin * cashoutPrice - requiredBallsPerSpinActual * (investmentPrice - cashoutPrice);
+
+        // 総合単価 (1回転)
+        // = 持玉単価 × 持ち玉比率 + 現金単価 × 現金比率
+        const valuePerSpin = (ballEvPerSpin * ballRatio) + (cashEvPerSpin * (1 - ballRatio));
+
+        // 時給と日給
+        const hourlyEV = valuePerSpin * spinsPerHour;
+        const dailyEV = hourlyEV * hours;
+
+        // 実質ボーダーラインの算出
+        const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
+        const realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
+
+        // --- 4. 結果表示 ---
+        function formatSpinValue(value) {
+            const absValue = Math.abs(value);
+            const formatted = absValue.toFixed(2);
+            return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
+        }
+
+        evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
+        evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
+        realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
+        valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
+        ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
+        cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
+
+
+        // 色とメッセージの更新
+        if (dailyEV > 0) {
+            evDailyDisplay.className = 'amount positive';
+            evHourlyDisplay.className = 'amount positive';
+            const diff = turnRatePer1k - realBorder;
+            noteDisplay.textContent = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
+        } else if (dailyEV < 0) {
+            evDailyDisplay.className = 'amount negative';
+            evHourlyDisplay.className = 'amount negative';
+            const diff = realBorder - turnRatePer1k;
+            noteDisplay.innerHTML = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
+        } else {
+            evDailyDisplay.className = 'amount';
+            evHourlyDisplay.className = 'amount';
+            noteDisplay.textContent = '期待値プラマイゼロのラインです。';
+        }
+    }
+
+    // イベントリスナーの一括登録
+    const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculateEV);
+        input.addEventListener('change', calculateEV);
     });
 
-function populateMachineSelect() {
-    // Clear existing options except the first one
-    machineSelect.innerHTML = '<option value="">-- 機種を選択するか直接入力 --</option>';
-
-    const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
-    let exchangeRateBalls = exchangeRateSelect.value === 'custom'
-        ? parseFloat(customExchangeInput.value)
-        : parseFloat(exchangeRateSelect.value);
-
-    // 貸玉単価と換金単価
-    const investmentPrice = playRate;
-    const cashoutPrice = (1000 / exchangeRateBalls) * (playRate / 4);
-
-    machineData.forEach(machine => {
-        // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
-        // gapFactor = (1 * investmentPrice + 0 * cashoutPrice) / cashoutPrice = investmentPrice / cashoutPrice
-        const gapFactor = investmentPrice / cashoutPrice;
-        const cashBorder = machine.border * gapFactor;
-
-        const option = document.createElement('option');
-        option.value = machine.border;
-        option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})`;
-        machineSelect.appendChild(option);
-    });
-}
-
-// 再計算時や設定変更時にリストの表示（現金ボーダー）も更新する
-exchangeRateSelect.addEventListener('change', populateMachineSelect);
-playRateRadios.forEach(radio => radio.addEventListener('change', populateMachineSelect));
-
-machineSelect.addEventListener('change', (e) => {
-    if (e.target.value) {
-        // display up to 1 decimal place dynamically, or 2 if needed
-        borderInput.value = parseFloat(e.target.value).toFixed(2);
-        calculateEV();
-    }
-});
-
-// Utilities
-function formatCurrency(amount) {
-    const absAmount = Math.abs(amount);
-    const formatted = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(absAmount);
-    return amount < 0 ? `-${formatted}` : `+${formatted}`;
-}
-
-// Main Calculation
-function calculateEV() {
-    // --- 1. 入力値の取得 ---
-    const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
-    const ballsPer1k = 1000 / playRate; // 4円=250玉, 2円=500玉, 1円=1000玉
-
-    let exchangeRateBalls = exchangeRateSelect.value === 'custom'
-        ? parseFloat(customExchangeInput.value)
-        : parseFloat(exchangeRateSelect.value);
-
-    // "1000円あたりの交換玉数" を "1玉あたりの換金単価"に直す (例: 250玉 -> 4.0 , 280玉 -> 約3.57)
-    // 4円設定の時: 1000 / 250 = 4.0円/玉
-    // 1円設定の時は入力欄の「玉数」基準が変わるため、比率で計算
-    // （一般的な非等価表記に合わせるため、入力された「1000円あたりの玉数(4円相当)」から基準単価を出す）
-
-    // ユーザーが選ぶ交換率（250枠/280枠など）は基本的に「4円パチンコ換算での玉数」として扱う方が直感的
-    // なので、1玉の価値 = (1000(円) / 交換率玉数) × (貸玉レート / 4) とする
-    // 例: 1円パチンコ、等価(250選択) -> (1000/250) * (1/4) = 4 * 0.25 = 1.0円/玉
-    let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
-
-    // 実戦データからの回転率計算
-    const startSpin = parseFloat(startSpinInput.value) || 0;
-    const currentSpin = parseFloat(currentSpinInput.value) || 0;
-    const investCash = parseFloat(investCashInput.value) || 0;
-    const investBalls = parseFloat(investBallsInput.value) || 0;
-
-    const totalSpinsMeasured = currentSpin - startSpin;
-
-    // 投資額と持ち玉比率の計算
-    const cashInvestedYen = investCash;
-    const ballsInvestedYen = investBalls * playRate;
-    const totalInvestedYen = cashInvestedYen + ballsInvestedYen;
-
-    let ballRatio = 1.0; // 投資がない場合は一旦100%扱い
-    if (totalInvestedYen > 0) {
-        ballRatio = ballsInvestedYen / totalInvestedYen;
-    }
-
-    let turnRatePer1k = 0;
-    if (totalInvestedYen > 0) {
-        // 1000円あたりの回転数 = (総回転数 / 総投資額) * 1000
-        turnRatePer1k = (totalSpinsMeasured / totalInvestedYen) * 1000;
-    }
-
-    measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
-
-    const hours = parseFloat(hoursInput.value) || 0;
-    const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
-
-    if (isNaN(borderBase) || borderBase <= 0 || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
-        evDailyDisplay.textContent = '¥0';
-        evHourlyDisplay.textContent = '¥0';
-        totalSpinsDisplay.textContent = '0 回転';
-        realBorderDisplay.textContent = '-- 回転 / 1k';
-        valuePerSpinDisplay.textContent = '¥0.00';
-        ballEvPerSpinDisplay.textContent = '¥0.00';
-        cashEvPerSpinDisplay.textContent = '¥0.00';
-        evDailyDisplay.className = 'amount';
-        evHourlyDisplay.className = 'amount';
-        noteDisplay.textContent = '実戦データを入力すると自動計算されます。';
-        return;
-    }
-
-    const totalSpinsDaily = hours * spinsPerHour;
-    totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
-
-    // --- 3. 期待値計算のコアロジック ---
-    // 1回転回すのに必要な玉数
-    // ボーダー基準での1回転消費玉数
-    const requiredBallsPerSpinBase = 250 / borderBase;
-    // 実測での1回転消費玉数（入力された1000円あたりの回転率から算出）
-    const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
-
-    // 1回転あたりの期待「差引玉数」（プラスなら持ち玉が増える、マイナスなら減る）
-    // スプレッドシート式: 期待玉数 = ボーダー基準1回転の消費玉数 - 実測1回転の消費玉数
-    const expectedBallsPerSpin = requiredBallsPerSpinBase - requiredBallsPerSpinActual;
-
-    // 交換ギャップを含めた金額期待値の算出
-    const investmentPrice = playRate; // 4円、2円、1円
-    const cashoutPrice = valuePerBallCashout;
-
-    // 持玉単価 (1回転)
-    // = 期待差引玉数 × 換金価格（※手数料なしなら貸玉と同じ）
-    // スプレッドシート式: 持ち玉単価 = 期待玉数 × (等価時の単価)
-    const ballEvPerSpin = expectedBallsPerSpin * cashoutPrice;
-
-    // 現金単価 (1回転)
-    // = 持玉単価 - 実測1回転の消費玉数 × 換金ギャップ(貸玉価格 - 換金価格)
-    // スプレッドシート式: 現金単価 = 持玉単価 - ( 250 / 回転率 ) × ( 4円 - 換金等価 )
-    const cashEvPerSpin = expectedBallsPerSpin * cashoutPrice - requiredBallsPerSpinActual * (investmentPrice - cashoutPrice);
-
-    // 総合単価 (1回転)
-    // = 持玉単価 × 持ち玉比率 + 現金単価 × 現金比率
-    const valuePerSpin = (ballEvPerSpin * ballRatio) + (cashEvPerSpin * (1 - ballRatio));
-
-    // 時給と日給
-    const hourlyEV = valuePerSpin * spinsPerHour;
-    const dailyEV = hourlyEV * hours;
-
-    // 実質ボーダーラインの算出
-    const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
-    const realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
-
-    // --- 4. 結果表示 ---
-    function formatSpinValue(value) {
-        const absValue = Math.abs(value);
-        const formatted = absValue.toFixed(2);
-        return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
-    }
-
-    evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
-    evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
-    realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
-    valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
-    ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
-    cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
-
-
-    // 色とメッセージの更新
-    if (dailyEV > 0) {
-        evDailyDisplay.className = 'amount positive';
-        evHourlyDisplay.className = 'amount positive';
-        const diff = turnRatePer1k - realBorder;
-        noteDisplay.textContent = `実質ボーダーラインを ${diff.toFixed(1)} 回転 上回っています。`;
-    } else if (dailyEV < 0) {
-        evDailyDisplay.className = 'amount negative';
-        evHourlyDisplay.className = 'amount negative';
-        const diff = realBorder - turnRatePer1k;
-        noteDisplay.innerHTML = `実質ボーダーラインに <strong>${diff.toFixed(1)} 回転 不足</strong>しています。`;
-    } else {
-        evDailyDisplay.className = 'amount';
-        evHourlyDisplay.className = 'amount';
-        noteDisplay.textContent = '期待値プラマイゼロのラインです。';
-    }
-}
-
-// イベントリスナーの一括登録
-const inputs = document.querySelectorAll('input[type="number"], input[type="radio"]');
-inputs.forEach(input => {
-    input.addEventListener('input', calculateEV);
-    input.addEventListener('change', calculateEV);
-});
-
-// 初期計算
-calculateEV();
+    // 初期計算
+    calculateEV();
 });
