@@ -1,3 +1,9 @@
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
+    return false;
+};
+console.log('[DEBUG] app.js start executing');
+
 document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
     const playRateRadios = document.querySelectorAll('input[name="play-rate"]');
@@ -58,7 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('change', calculateEV);
     });
 
-    calculateEV();
+    // 初回の計算呼び出し（DOM未完全やデータ未ロード時のエラーで後続処理が止まるのを防ぐ）
+    try {
+        calculateEV();
+    } catch (e) {
+        console.warn('Initial calculateEV skipped or failed:', e);
+    }
 
     // Preset Machine Logic
     let machineData = [];
@@ -568,7 +579,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderHistory();
-
     // 初期計算
-    calculateEV();
+    try {
+        calculateEV();
+    } catch (e) {
+        console.warn('Final calculateEV skipped or failed:', e);
+    }
 });
