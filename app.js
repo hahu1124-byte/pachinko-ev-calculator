@@ -410,19 +410,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? effectiveProb / (machineAvgChain * 10)
                 : prob;
 
+            // 計算式で使用する実質的な1R出玉(rb)を定義 (実測優先)
+            const rb = measuredRb > 0 ? measuredRb : defaultRb;
+
             // === I18相当: 通常持玉単価 ===
-            // 【通常時の持玉単価が0以上の場合】 通常時の持玉単価 / 換算係数
-            // 【通常時の持玉単価が0未満の場合】 通常時の持玉単価 * 換算係数
             const i18Result = normalBallUnitPrice >= 0
-                ? (normalBallUnitPrice / conversionFactor)
-                : (normalBallUnitPrice * conversionFactor);
+                ? (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4 / (ballsPer1k / 250) / conversionFactor)
+                : (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4 / (ballsPer1k / 250) * conversionFactor);
 
             // === I19相当: 現金単価 ===
-            // 【通常時の現金単価が0以上の場合】 通常時の現金単価 / 換算係数
-            // 【通常時の現金単価が0未満の場合】 通常時の現金単価 * 換算係数
             const i19Result = normalCashUnitPrice >= 0
-                ? (normalCashUnitPrice / conversionFactor)
-                : (normalCashUnitPrice * conversionFactor);
+                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)
+                : (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) * conversionFactor);
 
             // === K18: 遊タイム持玉単価 ===
             yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
