@@ -126,93 +126,91 @@
                         <span>実測1R平均出玉 (自動反映): </span>
                         <strong id="measured-rb" class="highlight-value">-- 玉</strong>
                     </div>
+                </div>
 
+                <div class="card result-section">
+                    <h2>期待値計算結果</h2>
 
-
-                    <div class="card result-section">
-                        <h2>期待値計算結果</h2>
-
-                        <div class="result-grid">
-                            <div class="result-box ev">
-                                <h3>期待値</h3>
-                                <div
-                                    style="display: flex; align-items: baseline; justify-content: center; gap: 1rem; margin-top: 0.5rem;">
-                                    <p class="amount" id="expected-value-daily" style="font-size: 2rem; margin: 0;">¥0
-                                    </p>
-                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">時給換算: <span
-                                            id="expected-value-hourly" style="font-weight: bold;">¥0</span></p>
-                                </div>
+                    <div class="result-grid">
+                        <div class="result-box ev">
+                            <h3>期待値</h3>
+                            <div
+                                style="display: flex; align-items: baseline; justify-content: center; gap: 1rem; margin-top: 0.5rem;">
+                                <p class="amount" id="expected-value-daily" style="font-size: 2rem; margin: 0;">¥0
+                                </p>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">時給換算: <span
+                                        id="expected-value-hourly" style="font-weight: bold;">¥0</span></p>
                             </div>
-                        </div>
-
-                        <div class="result-grid"
-                            style="grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                            <div class="result-box" style="padding: 1rem;">
-                                <h3 style="font-size: 0.8rem;">持玉単価</h3>
-                                <p class="amount" id="ball-ev-per-spin" style="font-size: 1.1rem;">¥0.00</p>
-                            </div>
-                            <div class="result-box" style="padding: 1rem;">
-                                <h3 style="font-size: 0.8rem;">現金単価</h3>
-                                <p class="amount" id="cash-ev-per-spin" style="font-size: 1.1rem;">¥0.00</p>
-                            </div>
-                            <div class="result-box" style="padding: 1rem;">
-                                <h3 style="font-size: 0.75rem;">持玉比率単価</h3>
-                                <p class="amount" id="value-per-spin" style="font-size: 1.1rem;">¥0.00</p>
-                            </div>
-                        </div>
-
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-label">総通常回転数:</span>
-                                <span class="stat-value" id="total-spins">0 回転</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">実質ボーダー (現在条件):</span>
-                                <span class="stat-value" id="real-border">-- 回転 / 1k</span>
-                            </div>
-                            <div class="stat-item" id="yutime-ev-row"
-                                style="display: none; border-top: 1px dotted rgba(255,255,255,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
-                                <span class="stat-label" style="color: var(--accent);">遊タイム期待値 (加算分):</span>
-                                <span class="stat-value" id="yutime-ev-only" style="color: var(--accent);">¥0</span>
-                            </div>
-                        </div>
-
-                        <div class="info-note" id="ev-note">
-                            数値を入力すると自動計算されます。
-                        </div>
-
-                        <div style="margin-top: 1.5rem;">
-                            <button type="button" id="save-history-btn" class="btn-primary"
-                                style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; font-weight: bold; background: var(--primary); color: white; border: none; cursor: pointer;">
-                                この結果を履歴に保存する
-                            </button>
                         </div>
                     </div>
-                </div> <!-- end calculator-column -->
 
-                <aside class="history-column card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h2 style="margin-bottom: 0;">保存済み履歴</h2>
-                        <button type="button" id="delete-selected-btn"
-                            style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択した項目を削除</button>
+                    <div class="result-grid"
+                        style="grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div class="result-box" style="padding: 1rem;">
+                            <h3 style="font-size: 0.8rem;">持玉単価</h3>
+                            <p class="amount" id="ball-ev-per-spin" style="font-size: 1.1rem;">¥0.00</p>
+                        </div>
+                        <div class="result-box" style="padding: 1rem;">
+                            <h3 style="font-size: 0.8rem;">現金単価</h3>
+                            <p class="amount" id="cash-ev-per-spin" style="font-size: 1.1rem;">¥0.00</p>
+                        </div>
+                        <div class="result-box" style="padding: 1rem;">
+                            <h3 style="font-size: 0.75rem;">持玉比率単価</h3>
+                            <p class="amount" id="value-per-spin" style="font-size: 1.1rem;">¥0.00</p>
+                        </div>
                     </div>
 
-                    <div class="history-summary"
-                        style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
-                        <p style="margin: 0; display: flex; justify-content: space-between;"><span>合計 期待値:</span>
-                            <strong id="history-total-ev" class="positive">¥0</strong>
-                        </p>
-                        <p style="margin: 0.5rem 0 0; display: flex; justify-content: space-between;"><span>平均
-                                持比単価:</span>
-                            <strong id="history-avg-ball-ev">¥0.00</strong>
-                        </p>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">総通常回転数:</span>
+                            <span class="stat-value" id="total-spins">0 回転</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">実質ボーダー (現在条件):</span>
+                            <span class="stat-value" id="real-border">-- 回転 / 1k</span>
+                        </div>
+                        <div class="stat-item" id="yutime-ev-row"
+                            style="display: none; border-top: 1px dotted rgba(255,255,255,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
+                            <span class="stat-label" style="color: var(--accent);">遊タイム期待値 (加算分):</span>
+                            <span class="stat-value" id="yutime-ev-only" style="color: var(--accent);">¥0</span>
+                        </div>
                     </div>
 
-                    <div id="history-list" class="history-list">
-                        <!-- 履歴アイテムがここに追加されます -->
+                    <div class="info-note" id="ev-note">
+                        数値を入力すると自動計算されます。
                     </div>
-                </aside>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="button" id="save-history-btn" class="btn-primary"
+                            style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; font-weight: bold; background: var(--primary); color: white; border: none; cursor: pointer;">
+                            この結果を履歴に保存する
+                        </button>
+                    </div>
+                </div>
+            </div> <!-- end calculator-column -->
+
+            <aside class="history-column card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin-bottom: 0;">保存済み履歴</h2>
+                    <button type="button" id="delete-selected-btn"
+                        style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択した項目を削除</button>
+                </div>
+
+                <div class="history-summary"
+                    style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <p style="margin: 0; display: flex; justify-content: space-between;"><span>合計 期待値:</span>
+                        <strong id="history-total-ev" class="positive">¥0</strong>
+                    </p>
+                    <p style="margin: 0.5rem 0 0; display: flex; justify-content: space-between;"><span>平均
+                            持比単価:</span>
+                        <strong id="history-avg-ball-ev">¥0.00</strong>
+                    </p>
+                </div>
+
+                <div id="history-list" class="history-list">
+                    <!-- 履歴アイテムがここに追加されます -->
+                </div>
+            </aside>
         </main>
 
         <footer>
