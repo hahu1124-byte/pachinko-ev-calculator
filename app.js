@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
     const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
     const noteDisplay = document.getElementById('ev-note');
-    const yutimeSpinsInput = document.getElementById('yutime-spins');
     const yutimeEvRow = document.getElementById('yutime-ev-row');
     const yutimeEvOnlyDisplay = document.getElementById('yutime-ev-only');
 
@@ -75,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const primaryProbs = rows[1]; // 大当たり確率
             const rbs = rows[2];
             const probs = rows[4]; // トータル確率
+            const yutimes = rows[6]; // 遊タイム突入回転数
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const primaryProb = parseFloat(primaryProbs[i]);
                 const rb = parseFloat(rbs[i]);
                 const prob = parseFloat(probs[i]);
+                const yutimeSpinLimit = parseFloat(yutimes[i]) || 0;
 
                 if (rb > 0 && prob > 0) {
                     // 等価ボーダー = 250 / (仮定RB / トータル確率)
@@ -93,7 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         border: border,
                         prob: prob,
                         primaryProb: primaryProb,
-                        rb: rb
+                        rb: rb,
+                        yutimeSpins: yutimeSpinLimit
                     });
                 }
             }
@@ -103,9 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading machines CSV (CORS likely blocked local access):', error);
             // ローカル実行時など、CORSエラーで取得できない場合のフォールバックデータ
             machineData = [
-                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140 },
-                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140 },
-                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140 }
+                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950 },
+                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0 },
+                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0 }
             ];
 
             const option = document.createElement('option');
@@ -181,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let prob = 0;
         let primaryProb = 0;
         let defaultRb = 0;
+        let machineYutimeLimit = 0;
 
         const selectedIdx = machineSelect.value;
         if (selectedIdx !== "" && machineData[selectedIdx]) {
@@ -189,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
             prob = machine.prob;
             primaryProb = machine.primaryProb;
             defaultRb = machine.rb;
+            machineYutimeLimit = machine.yutimeSpins || 0;
         }
 
         // 実戦データからの回転率計算
@@ -301,8 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 遊タイム期待値算出 (スプレッドシート準拠)
         let yutimeEV = 0;
         let yutimeBonusEV = 0;
-        const yutimeSpins = parseFloat(yutimeSpinsInput.value) || 0;
         let hasYutime = false;
+
+        // DBから取得した天井から現在の打ち始めを引いて残り回転数を算出
+        const yutimeSpins = machineYutimeLimit > 0 ? Math.max(0, machineYutimeLimit - startSpin) : 0;
 
         // primaryProb (大当たり確率) が取得できている場合のみ遊タイム計算を行う
         if (yutimeSpins > 0 && primaryProb > 0 && prob > 0) {
@@ -376,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
             turnRate: turnRatePer1k,
             totalSpinsMeasured: totalSpinsMeasured,
             dailyEV: mainEV,
-            ballEv: ballEvPerSpin,
+            valuePerSpin: valuePerSpin,
             hasYutime: hasYutime,
             yutimeEV: yutimeEV
         };
@@ -411,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         historyData.forEach((item, index) => {
             totalEv += item.dailyEV;
-            totalBallEv += item.ballEv;
+            totalBallEv += (item.valuePerSpin || item.ballEv || 0);
 
             const div = document.createElement('div');
             div.className = 'history-item';
@@ -422,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="history-item-body">
                     <p><span>回転率:</span> <span>${item.turnRate.toFixed(2)} / 1k (${item.totalSpinsMeasured}回転)</span></p>
-                    <p><span>持玉単価:</span> <span>¥${item.ballEv.toFixed(2)}</span></p>
+                    <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
                     <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${item.dailyEV >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV))}</span></p>
                 </div>
             `;
