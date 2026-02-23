@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSpinsDisplay = document.getElementById('total-spins');
     const realBorderDisplay = document.getElementById('real-border');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
+    const ballEvPerSpinDisplay = document.getElementById('ball-ev-per-spin');
+    const cashEvPerSpinDisplay = document.getElementById('cash-ev-per-spin');
     const noteDisplay = document.getElementById('ev-note');
 
     // UI Toggle Logic
@@ -165,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
             totalSpinsDisplay.textContent = '0 回転';
             realBorderDisplay.textContent = '-- 回転 / 1k';
             valuePerSpinDisplay.textContent = '¥0.00';
+            ballEvPerSpinDisplay.textContent = '¥0.00';
+            cashEvPerSpinDisplay.textContent = '¥0.00';
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
             noteDisplay.textContent = '数値を入力すると自動計算されます。';
@@ -182,52 +186,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
 
         // 1回転あたりの期待「差引玉数」（プラスなら持ち玉が増える、マイナスなら減る）
+        // スプレッドシート式: 期待玉数 = ボーダー基準1回転の消費玉数 - 実測1回転の消費玉数
         const expectedBallsPerSpin = requiredBallsPerSpinBase - requiredBallsPerSpinActual;
 
         // 交換ギャップを含めた金額期待値の算出
-        // 1回転の価値(円) ＝ 期待玉数 × (持ち玉割合 × 貸出玉単価 ＋ 現金投資割合 × 換金玉単価)
-        // ※「手数料込（非等価）」オフの場合は、常に貸玉単価=換金玉単価として計算(等価扱い)
-
         const investmentPrice = playRate; // 4円、2円、1円
         const cashoutPrice = hasFee ? valuePerBallCashout : playRate;
 
-        let avgValuePerBall;
-        if (expectedBallsPerSpin >= 0) {
-            // プラス期待値の場合は、最終的に余る玉を換金するので、換金レートの影響を受ける
-            // （厳密シミュレーションではないので、簡易的に加重平均）
-            avgValuePerBall = (ballRatio * cashoutPrice) + ((1 - ballRatio) * cashoutPrice);
-            // ※プラスなら最終的に全部換金なので基本的に cashoutPrice になる
-        } else {
-            // マイナス期待値（追加投資が必要）の場合
-            avgValuePerBall = (ballRatio * cashoutPrice) + ((1 - ballRatio) * investmentPrice);
-        }
+        // 持玉単価 (1回転)
+        // = 期待差引玉数 × 換金価格（※手数料なしなら貸玉と同じ）
+        // スプレッドシート式: 持ち玉単価 = 期待玉数 × (等価時の単価)
+        const ballEvPerSpin = expectedBallsPerSpin * cashoutPrice;
 
-        const valuePerSpin = expectedBallsPerSpin * avgValuePerBall;
+        // 現金単価 (1回転)
+        // = 持玉単価 - 実測1回転の消費玉数 × 換金ギャップ(貸玉価格 - 換金価格)
+        // スプレッドシート式: 現金単価 = 持玉単価 - ( 250 / 回転率 ) × ( 4円 - 換金等価 )
+        const cashEvPerSpin = expectedBallsPerSpin * cashoutPrice - requiredBallsPerSpinActual * (investmentPrice - cashoutPrice);
+
+        // 総合単価 (1回転)
+        // = 持玉単価 × 持ち玉比率 + 現金単価 × 現金比率
+        const valuePerSpin = (ballEvPerSpin * ballRatio) + (cashEvPerSpin * (1 - ballRatio));
 
         // 時給と日給
         const hourlyEV = valuePerSpin * spinsPerHour;
         const dailyEV = hourlyEV * hours;
 
         // 実質ボーダーラインの算出
-        // 1000円投資したときに、差引金額が0になる回転数を逆算
         let realBorder;
         if (hasFee) {
-            // 非等価の場合、現金投資比率が高いほどボーダーは上がる
-            // 一般に実質ボーダー(1000円あたり) = 貸玉数 / (250/等価ボーダー × (現金比率×貸玉単価 + 持ち玉比率×換金単価) / 貸玉単価)
             const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
             realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
-            // 4円等価時は borderBase * 4 * 1 = borderBase * 4 となるため、1000円表記に直す
         } else {
-            // 等価の場合は (250玉ボーダー) × (貸玉数 / 250) = 1000円あたりの回転数
             realBorder = borderBase * (ballsPer1k / 250);
         }
-
 
         // --- 4. 結果表示 ---
         evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
         evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
         valuePerSpinDisplay.textContent = formatCurrency(valuePerSpin);
+        ballEvPerSpinDisplay.textContent = formatCurrency(ballEvPerSpin);
+        cashEvPerSpinDisplay.textContent = formatCurrency(cashEvPerSpin);
+
 
         // 色とメッセージの更新
         if (dailyEV > 0) {

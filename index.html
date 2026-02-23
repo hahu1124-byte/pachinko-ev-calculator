@@ -39,6 +39,7 @@
                     <div class="select-wrapper">
                         <select id="exchange-rate">
                             <option value="250">等価交換 (250玉 / 4.00円)</option>
+                            <option value="275">27.5玉交換 (275玉 / 3.63円)</option>
                             <option value="280">28玉交換 (280玉 / 3.57円)</option>
                             <option value="300">30玉交換 (300玉 / 3.33円)</option>
                             <option value="330">33玉交換 (330玉 / 3.03円)</option>
@@ -115,6 +116,17 @@
                     </div>
                 </div>
 
+                <div class="result-grid" style="grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div class="result-box" style="padding: 1rem;">
+                        <h3 style="font-size: 0.8rem;">持玉単価 (1回転)</h3>
+                        <p class="amount" id="ball-ev-per-spin" style="font-size: 1.25rem;">¥0.00</p>
+                    </div>
+                    <div class="result-box" style="padding: 1rem;">
+                        <h3 style="font-size: 0.8rem;">現金単価 (1回転)</h3>
+                        <p class="amount" id="cash-ev-per-spin" style="font-size: 1.25rem;">¥0.00</p>
+                    </div>
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-item">
                         <span class="stat-label">総通常回転数:</span>
@@ -125,7 +137,7 @@
                         <span class="stat-value" id="real-border">-- 回転 / 1k</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">1回転あたりの単価:</span>
+                        <span class="stat-label">総合単価 (平均):</span>
                         <span class="stat-value" id="value-per-spin">¥0.00</span>
                     </div>
                 </div>
