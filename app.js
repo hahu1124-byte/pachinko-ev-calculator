@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === I19相当: 現金単価 ===
             const i19Result = normalCashUnitPrice >= 0
-                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)
+                ? ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) / conversionFactor
                 : (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k) * conversionFactor);
 
             // === K18: 遊タイム持玉単価 ===
@@ -451,6 +451,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isFinite(mainEV)) mainEV = 0;
         if (!isFinite(finalValuePerSpin)) finalValuePerSpin = 0;
+
+        // UIラベルの変更 (持玉比率単価)
+        const valuePerSpinLabel = valuePerSpinDisplay.previousElementSibling;
+        if (valuePerSpinLabel && valuePerSpinLabel.tagName.toLowerCase() === 'h3') {
+            valuePerSpinLabel.textContent = (hasYutime && yutimeValuePerSpin > normalValuePerSpin)
+                ? '持玉比率単価（遊）'
+                : '持玉比率単価';
+        }
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
