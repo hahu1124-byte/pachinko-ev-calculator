@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>パチンコ期待値計算ツール</title>
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
@@ -169,6 +169,11 @@
                             <span class="stat-label" style="color: var(--accent);">遊タイム期待値:</span>
                             <span class="stat-value" id="yutime-ev-only" style="color: var(--accent);">¥0</span>
                         </div>
+                        <div class="stat-item" id="yutime-value-row" style="display: none; padding-top: 0.25rem;">
+                            <span class="stat-label" style="color: var(--accent);">遊タイム持比単価:</span>
+                            <span class="stat-value" id="yutime-value-per-spin"
+                                style="color: var(--accent);">¥0.00</span>
+                        </div>
                     </div>
 
                     <div class="info-note" id="ev-note">
@@ -216,7 +221,7 @@
             <p>&copy; 2026 パチンコ期待値計算ツール</p>
         </footer>
     </div>
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=8"></script>
 </body>
 
 </html>

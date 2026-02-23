@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteDisplay = document.getElementById('ev-note');
     const yutimeEvRow = document.getElementById('yutime-ev-row');
     const yutimeEvOnlyDisplay = document.getElementById('yutime-ev-only');
+    const yutimeValueRow = document.getElementById('yutime-value-row');
+    const yutimeValuePerSpinDisplay = document.getElementById('yutime-value-per-spin');
 
     // History Elements
     const saveHistoryBtn = document.getElementById('save-history-btn');
@@ -296,95 +298,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalSpinsDaily = totalSpinsMeasured;
         totalSpinsDisplay.textContent = `${totalSpinsDaily.toLocaleString()} 回転`;
 
-        // --- 3. 期待値計算のコアロジック ---
-        // 1回転回すのに必要な玉数
-        // ボーダー基準での1回転消費玉数
-        const requiredBallsPerSpinBase = 250 / activeBorderBase;
-        // 実測での1回転消費玉数（入力された1000円あたりの回転率から算出）
-        const requiredBallsPerSpinActual = ballsPer1k / turnRatePer1k;
+        // --- 3. 期待値計算 (通常時 + 遊タイム期待度) ---
 
-        // 1回転あたりの期待「差引玉数」（プラスなら持ち玉が増える、マイナスなら減る）
-        // スプレッドシート式: 期待玉数 = ボーダー基準1回転の消費玉数 - 実測1回転の消費玉数
-        const expectedBallsPerSpin = requiredBallsPerSpinBase - requiredBallsPerSpinActual;
+        // 1. 通常時の単価 (J18, J19 相当)
+        // 持玉単価 (1回転あたり)
+        // ※ 期待差引玉数 × 換金価格 
+        const normalBallUnitPrice = (measuredRb / (primaryProb) - (250 / activeBorderBase)) * (playRate / 250) * 250;
+        // 現金単価 (1回転あたり)
+        const normalCashUnitPrice = (measuredRb / (primaryProb) - (275 / activeBorderBase)) * (playRate / 250) * 250;
 
-        // 交換ギャップを含めた金額期待値の算出
-        const investmentPrice = playRate; // 4円、2円、1円
-        const cashoutPrice = valuePerBallCashout;
+        // 通常時の持玉比率単価 (J20相当)
+        const normalValuePerSpin = (normalBallUnitPrice * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
+        const dailyEV = normalValuePerSpin * totalSpinsMeasured;
 
-        // 持玉単価 (1回転)
-        // = 期待差引玉数 × 換金価格（※手数料なしなら貸玉と同じ）
-        // スプレッドシート式: 持ち玉単価 = 期待玉数 × (等価時の単価)
-        const ballEvPerSpin = expectedBallsPerSpin * cashoutPrice;
-
-        // 現金単価 (1回転)
-        // = 持玉単価 - 実測1回転の消費玉数 × 換金ギャップ(貸玉価格 - 換金価格)
-        // スプレッドシート式: 現金単価 = 持玉単価 - ( 250 / 回転率 ) × ( 4円 - 換金等価 )
-        const cashEvPerSpin = expectedBallsPerSpin * cashoutPrice - requiredBallsPerSpinActual * (investmentPrice - cashoutPrice);
-
-        // 総合単価 (1回転)
-        // = 持玉単価 × 持ち玉比率 + 現金単価 × 現金比率
-        const valuePerSpin = (ballEvPerSpin * ballRatio) + (cashEvPerSpin * (1 - ballRatio));
-
-        // 時給入力廃止にともない、総期待値＝（総合単価×実際の総回転数）とする
-        const dailyEV = valuePerSpin * totalSpinsMeasured;
-
-        // 遊タイム期待値算出 (スプレッドシート準拠)
+        // 2. 遊タイム期待値の計算 (スプレッドシート K18, K19 準拠)
         let yutimeEV = 0;
-        let yutimeBonusEV = 0;
-        let hasYutime = false;
+        let yutimeValuePerSpin = 0;
+        const hasYutime = machineYutimeLimit > 0 && primaryProb > 0;
 
-        // DBから取得した天井から現在の打ち始めを引いて残り回転数を算出
-        const yutimeSpins = machineYutimeLimit > 0 ? Math.max(0, machineYutimeLimit - startSpin) : 0;
+        if (hasYutime) {
+            const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
 
-        // primaryProb (大当たり確率) が取得できている場合のみ遊タイム計算を行う
-        if (yutimeSpins > 0 && primaryProb > 0 && prob > 0) {
-            hasYutime = true;
-            // 天井到達率 (K8) = 1 - (1 - 1/大当たり確率) ^ 残り回転数  ※スプレッドシートは到達しない確率を引く形が一般的
-            // スプレッドシートの到達率: (1 - 1/319.688)^950 = 0.05098 (非到達)
-            // 到達率は 1 - 0.05098 = 0.949019
-            const missProb = Math.pow(1 - (1 / primaryProb), yutimeSpins);
-            const reachProb = 1 - missProb;
+            // 換算係数 (G18相当: 4 / 交換率)
+            // 手数料無料の場合は 1.0 に近くなる。スプレッドシート式は playRate / (1玉あたりの換金単価)
+            const conversionFactor = playRate / valuePerBallCashout;
 
-            // 天井到達時の獲得期待玉数 = (1R出玉) × 遊タイム到達時の期待獲得 R数
-            // ※ 実測1Rが入力されていればそれを優先
-            const yutimeExpectedBalls = (measuredRb > 0 ? measuredRb : defaultRb) * machineYutimeRb;
+            // 遊タイム期待度 (G23相当: 天井到達率)
+            // = 1 - (1 - 1/大当たり確率)^残り回転数
+            const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinsRemaining);
 
-            // J15: 遊タイム期待値 (等価) = 到達率 × 期待玉数 × 等価交換単価 
-            // 等価交換単価は、貸玉料金と同等 (投資にギャップがない状態)
-            const yutimeEvEq = reachProb * yutimeExpectedBalls * investmentPrice;
+            // 遊タイム持玉単価 (K18相当)
+            // 単価がプラスなら期待度を掛け、マイナスなら係数を掛けて補正（スプレッドシートのロジック）
+            const yutimeBallUnitPrice = normalBallUnitPrice >= 0
+                ? (normalBallUnitPrice / conversionFactor * yutimeExpectancy)
+                : (normalBallUnitPrice * conversionFactor / yutimeExpectancy);
 
-            // J16: 遊タイム期待値 (現金) 
-            // 現金投資で遊タイムを追う場合、到達までに消費する玉数に対するギャップ損失分を引く必要がある
-            // 遊タイム到達までに必要な期待消費玉数（平均到達回転数に基づく厳密な計算が必要だが、スプレッドシート近似として）
-            // スプレッドシートの J16 は等価期待値にギャップ係数や現金投資割合を掛けて算出されている可能性が高い
-            // ここでは換金率を用いた現金単価の計算として YutimeEq * (換金単価 / 貸玉単価) または到達消費分のギャップ引きと解釈
-            // ユーザー指定「J15=等価単価, J16=現金単価」の通り、交換率直接の価格差を反映する
-            const yutimeEvCash = reachProb * yutimeExpectedBalls * cashoutPrice - (yutimeSpins * requiredBallsPerSpinActual * (investmentPrice - cashoutPrice));
+            // 遊タイム現金単価 (K19相当)
+            const yutimeCashUnitPrice = normalCashUnitPrice >= 0
+                ? (normalCashUnitPrice / conversionFactor * yutimeExpectancy)
+                : (normalCashUnitPrice * conversionFactor / yutimeExpectancy);
 
-            // J14: 遊タイム期待値 (持玉比率単価) = 等価 × 持ち玉比率 + 現金 × 現金比率 
-            // （※このブロック単体の期待値として独立させる）
-            yutimeEV = (yutimeEvEq * ballRatio) + (yutimeEvCash * (1 - ballRatio));
+            // 遊タイム持玉比率単価
+            yutimeValuePerSpin = (yutimeBallUnitPrice * ballRatio) + (yutimeCashUnitPrice * (1 - ballRatio));
+
+            // 遊タイム上乗せ期待値 (スプレッドシートの期待値表示用)
+            yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
         }
 
         // 実質ボーダーラインの算出
-        const gapFactor = ((1 - ballRatio) * investmentPrice + ballRatio * cashoutPrice) / cashoutPrice;
+        const gapFactor = ((1 - ballRatio) * playRate + ballRatio * valuePerBallCashout) / valuePerBallCashout;
         const realBorder = activeBorderBase * (ballsPer1k / 250) * gapFactor;
 
         // --- 4. 結果表示 ---
-        // 遊タイムがある場合は、通常の期待値と遊タイムの期待値で「高いほう」を採用してメイン表示とする
+        // メインの期待値表示：通常と遊タイムの高い方を採用
         const mainEV = hasYutime ? Math.max(dailyEV, yutimeEV) : dailyEV;
+        // 履歴保存用の単価：通常と遊タイムの高い方を採用
+        const finalValuePerSpin = hasYutime ? Math.max(normalValuePerSpin, yutimeValuePerSpin) : normalValuePerSpin;
 
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
-        valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
-        ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
-        cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
+        valuePerSpinDisplay.textContent = formatSpinValue(finalValuePerSpin);
+        ballEvPerSpinDisplay.textContent = formatSpinValue(normalBallUnitPrice);
+        cashEvPerSpinDisplay.textContent = formatSpinValue(normalCashUnitPrice);
 
-        if (hasYutime && yutimeEvRow && yutimeEvOnlyDisplay) {
+        if (hasYutime && yutimeEV > 0) {
             yutimeEvRow.style.display = 'flex';
             yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV));
-        } else if (yutimeEvRow) {
+            yutimeValueRow.style.display = 'flex';
+            yutimeValuePerSpinDisplay.textContent = formatSpinValue(yutimeValuePerSpin);
+        } else {
             yutimeEvRow.style.display = 'none';
+            yutimeValueRow.style.display = 'none';
         }
 
         // 保存用のデータを一時保持
@@ -396,7 +380,9 @@ document.addEventListener('DOMContentLoaded', () => {
             turnRate: turnRatePer1k,
             totalSpinsMeasured: totalSpinsMeasured,
             dailyEV: mainEV,
-            valuePerSpin: valuePerSpin,
+            valuePerSpin: finalValuePerSpin,
+            ballEv: normalBallUnitPrice,
+            cashEv: normalCashUnitPrice,
             hasYutime: hasYutime,
             yutimeEV: yutimeEV
         };
