@@ -63,17 +63,62 @@ document.addEventListener('DOMContentLoaded', () => {
     // Preset Machine Logic
     let machineData = [];
 
-    // Fetch machines data from Google Sheets using the Visualization API (JSON output)
-    const jsonUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_796u4Jr47n-XPfoOJIMbl3D0/gviz/tq?tqx=out:json&gid=493752965';
-    fetch(jsonUrl)
+    // Google Sheets CSV URL
+    const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
+
+    // 引用符付きCSVを正しくパースする関数 (セル内改行・カンマ対応)
+    function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            if (inQuotes) {
+                if (c === '"' && text[i + 1] === '"') {
+                    cell += '"';
+                    i++;
+                } else if (c === '"') {
+                    inQuotes = false;
+                } else {
+                    cell += c;
+                }
+            } else {
+                if (c === '"') {
+                    inQuotes = true;
+                } else if (c === ',') {
+                    row.push(cell);
+                    cell = '';
+                } else if (c === '\n' || (c === '\r' && text[i + 1] === '\n')) {
+                    if (c === '\r') i++;
+                    row.push(cell);
+                    cell = '';
+                    rows.push(row);
+                    row = [];
+                } else if (c === '\r') {
+                    row.push(cell);
+                    cell = '';
+                    rows.push(row);
+                    row = [];
+                } else {
+                    cell += c;
+                }
+            }
+        }
+        if (cell || row.length > 0) {
+            row.push(cell);
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    fetch(sheetCsvUrl)
         .then(response => response.text())
-        .then(text => {
-            // The response is wrapped like: google.visualization.Query.setResponse({...});
-            const jsonStr = text.replace(/^google\.visualization\.Query\.setResponse\(/, '').replace(/\);$/, '');
-            const data = JSON.parse(jsonStr);
-            // Extract rows as arrays of cell values
-            const rows = data.table.rows.map(r => r.c.map(c => (c && c.v !== undefined) ? c.v : ''));
-            // Expected layout: row 0 = machine names, row 1 = 大当たり確率, row 2 = 仮定RB, row 3 = 遊抜けor右打ち継続率, row 4 = トータル確率, row 5 = 遊タイム突入回転数, row 10 = 平均連荘, row 15 = 遊タイム回数
+        .then(csvText => {
+            csvText = csvText.trim();
+            const rows = parseCsv(csvText);
+            console.log('CSV rows loaded:', rows.length);
+
             const names = rows[0];
             const primaryProbs = rows[1];
             const rbs = rows[2];
@@ -85,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
-                const name = names[i] ? String(names[i]).trim() : '';
+                const name = names[i] ? names[i].trim() : '';
                 if (!name) continue;
                 const primaryProb = parseFloat(primaryProbs[i]);
                 const rb = parseFloat(rbs[i]);
@@ -112,8 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             populateMachineSelect();
         })
         .catch(error => {
-            console.error('Error loading machines JSON:', error);
-            // Fallback sample data
+            console.error('Error loading machines CSV:', error);
             machineData = [
                 { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23, avgChain: 3.011, yutimeSpinCount: 350 },
                 { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 },
