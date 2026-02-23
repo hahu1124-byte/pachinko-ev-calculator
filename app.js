@@ -319,35 +319,59 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalValuePerSpin = (normalBallUnitPrice * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
         const dailyEV = normalValuePerSpin * totalSpinsMeasured;
 
-        // 2. 遊タイム期待値の計算 (スプレッドシート K18, K19 準拠)
+        // 2. 遊タイム期待値の計算 (スプレッドシート F5, G4, K18, K19, J20 準拠)
         let yutimeEV = 0;
         let yutimeValuePerSpin = 0;
+        let yutimeBallUnitPriceResult = 0;
+        let yutimeCashUnitPriceResult = 0;
         const hasYutime = machineYutimeLimit > 0 && primaryProb > 0;
 
         if (hasYutime) {
             const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
 
-            // 換算係数 (G18相当: 4円ベース / 交換価格)
-            // スプレッドシートの G18 = 4 / 交換率(円) = playRate / 1玉あたり换金価格
-            const conversionFactor = playRate / valuePerBallCashout;
+            // === G18: 換算係数 = 4 / 交換率(円) ===
+            // 交換率(円) = valuePerBallCashout × (4 / playRate) で4円ベースに変換
+            const exchangeRateYen = valuePerBallCashout * (4 / playRate); // 4円ベースでの1玉の換金価値
+            const conversionFactor = 4 / exchangeRateYen; // G18 = 4 / 交換率
 
-            // 遊タイム期待度 (G23相当: 天井到達率)
+            // === G23: 遊タイム期待度 (天井到達率) ===
+            // = 1 - (1 - 1/大当たり確率)^残り回転数
             const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinsRemaining);
 
-            // 遊タイム持玉単価 (K18相当)
-            const yutimeBallUnitPrice = normalBallUnitPrice >= 0
+            // === G4: 遊タイムのトータル確率 ===
+            // 遊タイム中の期待R数(yutimeRb)を使ったトータル確率
+            // G4 = 250 / (仮定RB * 遊タイムRB数 / 大当たり確率)
+            // ※ 通常のトータル確率 prob = 250 / (defaultRb / primaryProb) と同じ形式で
+            //   遊タイム中のRB数を使用
+            const yutimeTotalProb = defaultRb > 0 ? (250 / (defaultRb * machineYutimeRb / primaryProb)) : prob;
+
+            // === F5: 実質確率 ===
+            // 遊タイム到達確率を加味した実質的な大当たり確率
+            // F5 = 1 / (1/大当たり確率 + 遊タイム期待度 × 遊タイムRB数 / 大当たり確率)
+            // ≒ primaryProb / (1 + yutimeExpectancy × machineYutimeRb)
+            // 別の解釈: 遊タイム込みで「実質的に何回転に1回当たるか」
+            const effectiveProb = primaryProb / (1 + yutimeExpectancy * machineYutimeRb);
+
+            // === K18: 遊タイム持玉単価 ===
+            // K18 = IF(J18>=0, J18/G18*G23, J18*G18/G23)
+            yutimeBallUnitPriceResult = normalBallUnitPrice >= 0
                 ? (normalBallUnitPrice / conversionFactor * yutimeExpectancy)
                 : (normalBallUnitPrice * conversionFactor / yutimeExpectancy);
 
-            // 遊タイム現金単価 (K19相当)
-            const yutimeCashUnitPrice = normalCashUnitPrice >= 0
+            // === K19: 遊タイム現金単価 ===
+            // K19 = IF(J19>=0, J19/G18*G23, J19*G18/G23)
+            yutimeCashUnitPriceResult = normalCashUnitPrice >= 0
                 ? (normalCashUnitPrice / conversionFactor * yutimeExpectancy)
                 : (normalCashUnitPrice * conversionFactor / yutimeExpectancy);
 
-            // 遊タイム持玉比率単価
-            yutimeValuePerSpin = (yutimeBallUnitPrice * ballRatio) + (yutimeCashUnitPrice * (1 - ballRatio));
+            // === J20: 持玉比率単価 ===
+            // J20 = MIN(J18,K18)*G21 + MIN(J19,K19)*(1-G21)
+            // ※ MIN を使い、通常と遊タイムの低い方（保守的な方）を採用
+            const minBallUnit = Math.min(normalBallUnitPrice, yutimeBallUnitPriceResult);
+            const minCashUnit = Math.min(normalCashUnitPrice, yutimeCashUnitPriceResult);
+            yutimeValuePerSpin = (minBallUnit * ballRatio) + (minCashUnit * (1 - ballRatio));
 
-            // 遊タイム上乗せ期待値
+            // 遊タイム期待値 = 遊タイム持玉比率単価 × 総回転数
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
         }
 
