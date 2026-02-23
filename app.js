@@ -67,10 +67,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
 
     // Fetch machines data from Google Sheets CSV
+    // 引用符付きCSVを正しくパースする関数 (セル内改行・カンマ対応)
+    function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            if (inQuotes) {
+                if (c === '"' && text[i + 1] === '"') {
+                    cell += '"';
+                    i++;
+                } else if (c === '"') {
+                    inQuotes = false;
+                } else {
+                    cell += c;
+                }
+            } else {
+                if (c === '"') {
+                    inQuotes = true;
+                } else if (c === ',') {
+                    row.push(cell);
+                    cell = '';
+                } else if (c === '\n' || (c === '\r' && text[i + 1] === '\n')) {
+                    if (c === '\r') i++;
+                    row.push(cell);
+                    cell = '';
+                    rows.push(row);
+                    row = [];
+                } else if (c === '\r') {
+                    row.push(cell);
+                    cell = '';
+                    rows.push(row);
+                    row = [];
+                } else {
+                    cell += c;
+                }
+            }
+        }
+        if (cell || row.length > 0) {
+            row.push(cell);
+            rows.push(row);
+        }
+        return rows;
+    }
+
     fetch(sheetCsvUrl)
         .then(response => response.text())
         .then(csvText => {
-            const rows = csvText.split('\n').map(row => row.split(','));
+            const rows = parseCsv(csvText);
 
             // CSV Rows:
             // 0: "", "Machine 1", "Machine 2"...
@@ -78,6 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2: "仮定RB", ...
             // 3: "遊抜けor右打ち継続率", ...
             // 4: "トータル確率", ...
+            // 5: "遊タイム突入回転数", ...
+            // 10: "平均連荘", ...
+            // 15: "遊タイム回数", ...
 
             const names = rows[0];
             const primaryProbs = rows[1]; // 大当たり確率
@@ -85,8 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const yutimeRbs = rows[3]; // 遊タイム中 期待獲得R数
             const probs = rows[4]; // トータル確率
             const yutimes = rows[5]; // 遊タイム突入回転数 (Excelの6行目はindex 5)
-            const avgChains = rows[10]; // 平均連荘 (11行目, index 10)
-            const yutimeSpinCounts = rows[15]; // 遊タイム回数 (16行目, index 15)
+            const avgChains = rows.length > 10 ? rows[10] : null; // 平均連荘 (11行目, index 10)
+            const yutimeSpinCounts = rows.length > 15 ? rows[15] : null; // 遊タイム回数 (16行目, index 15)
+
+            console.log('CSV rows loaded:', rows.length, 'avgChains row:', avgChains ? avgChains[0] : 'N/A', 'yutimeSpinCounts row:', yutimeSpinCounts ? yutimeSpinCounts[0] : 'N/A');
 
             machineData = [];
             for (let i = 1; i < names.length; i++) {
@@ -98,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const prob = parseFloat(probs[i]);
                 const yutimeSpinLimit = parseFloat(yutimes[i]) || 0;
                 const yutimeRbMulti = parseFloat(yutimeRbs[i]) || 0;
-                const avgChain = avgChains && avgChains[i] ? parseFloat(avgChains[i]) || 0 : 0;
-                const yutimeSpinCount = yutimeSpinCounts && yutimeSpinCounts[i] ? parseFloat(yutimeSpinCounts[i]) || 0 : 0;
+                const avgChain = (avgChains && avgChains[i]) ? parseFloat(avgChains[i]) || 0 : 0;
+                const yutimeSpinCount = (yutimeSpinCounts && yutimeSpinCounts[i]) ? parseFloat(yutimeSpinCounts[i]) || 0 : 0;
 
                 if (rb > 0 && prob > 0) {
                     // 等価ボーダー = 250 / (仮定RB / トータル確率)
