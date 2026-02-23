@@ -112,12 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return rows;
     }
 
+    console.log('[DEBUG] Starting CSV fetch from:', sheetCsvUrl);
     fetch(sheetCsvUrl)
-        .then(response => response.text())
+        .then(response => {
+            console.log('[DEBUG] CSV fetch response status:', response.status);
+            return response.text();
+        })
         .then(csvText => {
+            console.log('[DEBUG] CSV text received, length:', csvText.length);
             csvText = csvText.trim();
             const rows = parseCsv(csvText);
-            console.log('CSV rows loaded:', rows.length);
+            console.log('[DEBUG] CSV rows parsed:', rows.length, 'first row cols:', rows[0] ? rows[0].length : 0);
 
             const names = rows[0];
             const primaryProbs = rows[1];
