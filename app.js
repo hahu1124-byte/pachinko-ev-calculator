@@ -9,7 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const machineSelect = document.getElementById('machine-select');
     const borderInput = document.getElementById('border');
-    const turnRateInput = document.getElementById('turn-rate');
+    const startSpinInput = document.getElementById('start-spin');
+    const currentSpinInput = document.getElementById('current-spin');
+    const investCashInput = document.getElementById('invest-cash');
+    const investBallsInput = document.getElementById('invest-balls');
+    const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
     const hoursInput = document.getElementById('hours');
     const spinsPerHourInput = document.getElementById('spins-per-hour');
 
@@ -140,17 +144,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const ballRatio = parseFloat(ballRatioInput.value) / 100;
 
         // --- 2. 機種・ベースデータの取得 ---
-        // ここで入力するボーダーラインは「4円・等価」基準の公表値（例:18.0回/250玉）を想定しています。
-        // （1円で打つ場合でも「1000円(1000玉)で72回転」ではなく「250玉あたり18回転」という共通指標で入力させる）
         const borderBase = parseFloat(borderInput.value); // 250玉あたりの回転数
 
-        // 実測の回転率（入力は1000円あたりを想定）
-        let turnRatePer1k = parseFloat(turnRateInput.value);
+        // 実戦データからの回転率計算
+        const startSpin = parseFloat(startSpinInput.value) || 0;
+        const currentSpin = parseFloat(currentSpinInput.value) || 0;
+        const investCash = parseFloat(investCashInput.value) || 0;
+        const investBalls = parseFloat(investBallsInput.value) || 0;
+
+        const totalSpinsMeasured = currentSpin - startSpin;
+
+        // 投資された総額を、現在の貸玉料金(4円等)ベースの「金額」に換算
+        // 例: 1円パチンコで、投資5000円と2500玉の場合
+        // 現金投資分 = 5000円
+        // 貯玉投資分 = 2500玉 × 1円 = 2500円分
+        const totalInvestedYen = investCash + (investBalls * playRate);
+
+        let turnRatePer1k = 0;
+        if (totalInvestedYen > 0) {
+            // 1000円あたりの回転数 = (総回転数 / 総投資額) * 1000
+            turnRatePer1k = (totalSpinsMeasured / totalInvestedYen) * 1000;
+        }
+
+        measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
 
         const hours = parseFloat(hoursInput.value) || 0;
         const spinsPerHour = parseFloat(spinsPerHourInput.value) || 200;
 
-        if (isNaN(borderBase) || isNaN(turnRatePer1k) || borderBase <= 0 || turnRatePer1k <= 0) {
+        if (isNaN(borderBase) || borderBase <= 0 || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '¥0';
             evHourlyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
@@ -160,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cashEvPerSpinDisplay.textContent = '¥0.00';
             evDailyDisplay.className = 'amount';
             evHourlyDisplay.className = 'amount';
-            noteDisplay.textContent = '数値を入力すると自動計算されます。';
+            noteDisplay.textContent = '実戦データを入力すると自動計算されます。';
             return;
         }
 
@@ -205,12 +226,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const realBorder = borderBase * (ballsPer1k / 250) * gapFactor;
 
         // --- 4. 結果表示 ---
+        function formatSpinValue(value) {
+            const absValue = Math.abs(value);
+            const formatted = absValue.toFixed(2);
+            return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
+        }
+
         evDailyDisplay.textContent = formatCurrency(Math.round(dailyEV));
         evHourlyDisplay.textContent = formatCurrency(Math.round(hourlyEV));
         realBorderDisplay.textContent = `${realBorder.toFixed(1)} 回転 / 1k`;
-        valuePerSpinDisplay.textContent = formatCurrency(valuePerSpin);
-        ballEvPerSpinDisplay.textContent = formatCurrency(ballEvPerSpin);
-        cashEvPerSpinDisplay.textContent = formatCurrency(cashEvPerSpin);
+        valuePerSpinDisplay.textContent = formatSpinValue(valuePerSpin);
+        ballEvPerSpinDisplay.textContent = formatSpinValue(ballEvPerSpin);
+        cashEvPerSpinDisplay.textContent = formatSpinValue(cashEvPerSpin);
 
 
         // 色とメッセージの更新

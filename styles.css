@@ -212,6 +212,22 @@ input[type="range"] {
     margin-bottom: 0.5rem;
 }
 
+.calculated-rate {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border);
+}
+
+.highlight-value {
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
 .result-box.ev {
     border-color: rgba(234, 179, 8, 0.5);
 }
