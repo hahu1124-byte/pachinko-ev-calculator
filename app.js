@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // === J14: 回転単価(等価) ===
         // スプレッドシートJ14の数式: (((rb / トータル確率) - (250 / 回転率)) * 4) に各種補正を対応させた等価ベース
-        const j14Result = (((rb / prob) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
+        const j14Result = (((rb / prob) - (250 / turnRatePer1k)) * 4);
 
         // === K14: 通常時の持玉単価 (交換率考慮) ===
         // K14 = IF(J14>=0, J14/G18, J14*G18)
@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : prob;
 
             // === I18相当: 通常持玉単価 ===
-            const rawI18 = (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
+            const rawI18 = (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4);
             const i18Result = rawI18 >= 0
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
