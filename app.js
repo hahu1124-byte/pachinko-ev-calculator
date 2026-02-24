@@ -366,8 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const conversionFactor = 4 / exchangeRateYen;
 
         // === J14: 回転単価(等価) ===
-        // スプレッドシートJ14の数式: (((rb / トータル確率) - (250 / 回転率)) * 4) に各種補正を対応させた等価ベース
-        const j14Result = (((rb / prob) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
+        // スプレッドシートJ14相当：消費玉数を固定値250からレートごとの貸玉数(ballsPer1k)へ可変化
+        const j14Result = (((rb / prob) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250);
 
         // === K14: 通常時の持玉単価 (交換率考慮) ===
         // K14 = IF(J14>=0, J14/G18, J14*G18)
@@ -413,13 +413,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 : prob;
 
             // === I18相当: 通常持玉単価 ===
-            const rawI18 = (((rb / yutimeTotalProb) - (250 / turnRatePer1k)) * 4) / (ballsPer1k / 250);
+            // 消費玉数を固定値250から可変化 (ballsPer1k)
+            const rawI18 = (((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250);
             const i18Result = rawI18 >= 0
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
             // === I19相当: 現金単価 ===
-            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
+            // 消費金額も4円ベース(1000円)からレート基準の可変金額へ
+            const cashInvestPer1k = (ballsPer1k / 250) * 1000;
+            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (cashInvestPer1k / turnRatePer1k)) * (250 / ballsPer1k);
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
