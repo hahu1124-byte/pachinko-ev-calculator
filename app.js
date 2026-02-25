@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isCompactHistory) {
                     // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
                     summaryBox.style.display = 'block';
-                    summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/仕事量￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
+                    summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
                     if (historyTotalEv) historyTotalEv.parentElement.style.display = 'none';
                     if (historyAvgBallEv) historyAvgBallEv.parentElement.style.display = 'none';
                 } else {
@@ -627,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
                             <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
                             <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
-                            <p><span>総仕事量:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p>
+                            <p><span>総期待値:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p>
                             <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
                         </div>
                     `;
@@ -722,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const work = Math.round(item.dailyEV || 0).toLocaleString();
                     const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
 
-                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/仕事量￥${work}/持比${bRat}%\n\n`;
+                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%\n\n`;
                 });
 
                 text += `--------------------\n総計:\n`;
@@ -792,14 +792,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    renderHistory();
-    // 初期計算
-    try {
-        calculateEV();
-    } catch (e) {
-        console.warn('Final calculateEV skipped or failed:', e);
-    }
-
     // ========== LocalStorage を用いた基本設定値の保存と復元 ==========
     const STORAGE_KEY_SETTINGS = 'pachinkoSettings';
 
@@ -867,4 +859,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // CSVロード前に一旦設定を復元する
     loadSettings();
+
+    // 設定復元後に履歴と初期EVを描画・計算する
+    renderHistory();
+    try {
+        calculateEV();
+    } catch (e) {
+        console.warn('Final calculateEV skipped or failed:', e);
+    }
 });
