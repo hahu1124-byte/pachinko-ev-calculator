@@ -707,6 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let text = '📊 パチンコ期待値 履歴\n--------------------\n';
 
             if (isCompactHistory) {
+                // =============== 詳細表示時は「個々 → 区切り → 統計」の順 ===============
                 historyData.forEach(item => {
                     const mName = item.machineName || "不明";
                     const invK = (item.totalInvestedK || 0).toFixed(3);
@@ -730,10 +731,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     text += sumBox.textContent;
                 }
             } else {
+                // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
+
+                // 1. 統計データを先に出す(上の画面で表示されているサマリーから生成)
                 let totalEv = 0;
+                let sumSpins = 0;
+                let sumWork = 0;
+                let sumInvestK = 0;
+
+                historyData.forEach(item => {
+                    totalEv += item.dailyEV || 0;
+                    sumSpins += item.totalSpinsMeasured || 0;
+                    sumWork += item.dailyEV || 0;
+                    sumInvestK += item.totalInvestedK || 0;
+                });
+                const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
+                const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
+
+                text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
+                text += `📈 平均回転率: ${avgTurn} / 1k\n`;
+                text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
+                text += `--------------------\n\n`;
+
+                // 2. 個々のデータを出す
                 historyData.forEach(item => {
                     const dailyEV = item.dailyEV || 0;
-                    totalEv += dailyEV;
 
                     text += `🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
                     text += `回転率: ${(item.turnRate || 0).toFixed(2)} / 1k (${item.totalSpinsMeasured || 0}回転)\n`;
