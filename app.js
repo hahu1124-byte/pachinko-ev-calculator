@@ -612,15 +612,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
                 const count = historyData.length;
 
-                summaryBox.style.display = 'block';
-                summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/仕事量￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
-
                 if (isCompactHistory) {
-                    // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）の時は、下の旧サマリーを消す
+                    // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
+                    summaryBox.style.display = 'block';
+                    summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/仕事量￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
                     if (historyTotalEv) historyTotalEv.parentElement.style.display = 'none';
                     if (historyAvgBallEv) historyAvgBallEv.parentElement.style.display = 'none';
                 } else {
-                    // 簡略表示モード時は、下の旧サマリーも併せて表示する
+                    // 簡略表示モード時は、サマリーデータも縦並びの簡略版フォーマットで表示する
+                    summaryBox.style.display = 'block';
+                    summaryBox.innerHTML = `
+                        <div class="history-item-body" style="padding: 0;">
+                            <p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p>
+                            <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
+                            <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
+                            <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
+                            <p><span>総仕事量:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p>
+                            <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
+                        </div>
+                    `;
                     if (historyTotalEv) {
                         historyTotalEv.parentElement.style.display = 'flex';
                         historyTotalEv.textContent = formatCurrency(Math.round(sumWork));
@@ -632,7 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-
         } catch (e) {
             console.error('History Rendering Error:', e);
         }
@@ -747,10 +756,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     const toggleFormatBtn = document.getElementById('toggle-format-btn');
     if (toggleFormatBtn) {
+        // 初期状態のボタン表示
+        toggleFormatBtn.textContent = isCompactHistory ? '簡略' : '詳細';
+        toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
+
         toggleFormatBtn.addEventListener('click', () => {
             isCompactHistory = !isCompactHistory;
-            toggleFormatBtn.textContent = isCompactHistory ? '詳細' : '簡略';
-            toggleFormatBtn.style.background = isCompactHistory ? '#3b82f6' : '#64748b'; // blue or slate
+            // isCompactHistory=true(詳細表示中) なら「簡略(に戻す)」ボタン、false(簡略表示中) なら「詳細(にする)」ボタン
+            toggleFormatBtn.textContent = isCompactHistory ? '簡略' : '詳細';
+            toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
             saveSettings(); // 切り替え状態も保存
             renderHistory();
         });
@@ -818,8 +832,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (settings.isCompactHistory !== undefined) {
                     isCompactHistory = settings.isCompactHistory;
                     if (toggleFormatBtn) {
-                        toggleFormatBtn.textContent = isCompactHistory ? '詳細' : '簡略';
-                        toggleFormatBtn.style.background = isCompactHistory ? '#3b82f6' : '#64748b';
+                        toggleFormatBtn.textContent = isCompactHistory ? '簡略' : '詳細';
+                        toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
                     }
                 }
 
