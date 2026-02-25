@@ -605,21 +605,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const summaryBox = document.getElementById('history-summary-container');
             if (summaryBox) {
+                // どちらの表示モードでも共通して統計情報（長文テキスト）を作成・表示する
+                const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
+                const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
+                const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
+                const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
+                const count = historyData.length;
+
+                summaryBox.style.display = 'block';
+                summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/仕事量￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
+
                 if (isCompactHistory) {
-                    const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
-                    const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
-                    const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
-                    const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
-                    const count = historyData.length;
-
-                    summaryBox.style.display = 'block';
-                    summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/仕事量￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
-
+                    // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）の時は、下の旧サマリーを消す
                     if (historyTotalEv) historyTotalEv.parentElement.style.display = 'none';
                     if (historyAvgBallEv) historyAvgBallEv.parentElement.style.display = 'none';
                 } else {
-                    summaryBox.style.display = 'none';
-
+                    // 簡略表示モード時は、下の旧サマリーも併せて表示する
                     if (historyTotalEv) {
                         historyTotalEv.parentElement.style.display = 'flex';
                         historyTotalEv.textContent = formatCurrency(Math.round(sumWork));
