@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveHistoryBtn = document.getElementById('save-history-btn');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
     const deleteAllBtn = document.getElementById('delete-all-btn');
+    const shareLineBtn = document.getElementById('share-line-btn');
     const historyList = document.getElementById('history-list');
     const historyTotalEv = document.getElementById('history-total-ev');
     const historyAvgBallEv = document.getElementById('history-avg-ball-ev');
@@ -600,6 +601,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderHistory();
                 alert('すべての履歴を削除しました。');
             }
+        });
+    }
+
+    if (shareLineBtn) {
+        shareLineBtn.addEventListener('click', () => {
+            if (historyData.length === 0) {
+                alert('共有する履歴がありません。');
+                return;
+            }
+
+            let text = '📊 パチンコ期待値 履歴\n--------------------\n';
+            let totalEv = 0;
+
+            historyData.forEach(item => {
+                const dailyEV = item.dailyEV || 0;
+                totalEv += dailyEV;
+
+                text += `🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
+                text += `回転率: ${(item.turnRate || 0).toFixed(2)} / 1k (${item.totalSpinsMeasured || 0}回転)\n`;
+                text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
+                text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n\n`;
+            });
+
+            text += `--------------------\n💰 合計期待値: ${formatCurrency(Math.round(totalEv))}`;
+
+            // URLエンコード
+            const encodedText = encodeURIComponent(text);
+            const lineUrl = `https://line.me/R/msg/text/?${encodedText}`;
+
+            // LINEを開く
+            window.open(lineUrl, '_blank');
         });
     }
 
