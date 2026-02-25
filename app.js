@@ -43,10 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('history-list');
     const historyTotalEv = document.getElementById('history-total-ev');
     const historyAvgBallEv = document.getElementById('history-avg-ball-ev');
-
     let historyData = JSON.parse(localStorage.getItem('pachinkoHistory')) || [];
     let latestCalculation = null;
-    let isCompactHistory = true; // true = 詳細(v38以降の区切り), false = シンプル(v37相当)
+    let isCompactHistory = false; // true = 詳細(v38以降の区切り), false = 簡略(v37相当・デフォルト)
 
     // UI Toggle Logic
     exchangeRateSelect.addEventListener('change', (e) => {
@@ -751,6 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isCompactHistory = !isCompactHistory;
             toggleFormatBtn.textContent = isCompactHistory ? '詳細' : '簡略';
             toggleFormatBtn.style.background = isCompactHistory ? '#3b82f6' : '#64748b'; // blue or slate
+            saveSettings(); // 切り替え状態も保存
             renderHistory();
         });
     }
@@ -771,7 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
             playRate: document.querySelector('input[name="play-rate"]:checked').value,
             exchangeRate: exchangeRateSelect.value,
             customExchange: customExchangeInput.value,
-            machineSelect: machineSelect.value
+            machineSelect: machineSelect.value,
+            isCompactHistory: isCompactHistory
         };
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
     }
@@ -810,6 +811,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (settings.machineSelect !== undefined && settings.machineSelect !== "") {
                     // 機種リストが構築された後に復元されるように、データ属性等に一時保存
                     machineSelect.setAttribute('data-saved-value', settings.machineSelect);
+                }
+
+                // 表示形式
+                if (settings.isCompactHistory !== undefined) {
+                    isCompactHistory = settings.isCompactHistory;
+                    if (toggleFormatBtn) {
+                        toggleFormatBtn.textContent = isCompactHistory ? '詳細' : '簡略';
+                        toggleFormatBtn.style.background = isCompactHistory ? '#3b82f6' : '#64748b';
+                    }
                 }
 
             } catch (e) {
