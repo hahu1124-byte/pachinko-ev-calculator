@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
             measuredRb: measuredRb > 0 ? measuredRb : 0,
             bonusRounds: bonusRounds,
             acquiredBalls: bonusRounds > 0 && afterBonusBalls > 0 ? (afterBonusBalls - currentBalls) : 0,
-            diffBalls: (afterBonusBalls > 0 ? afterBonusBalls : currentBalls) - startBalls - Math.floor(cashInvestedYen * 1000 / playRate),
+            diffBalls: (afterBonusBalls > 0 ? afterBonusBalls : currentBalls) - startBalls - Math.floor(cashInvestedYen / playRate),
             ballRatio: ballRatio,
             positiveBallsYen: Math.max(0, usedBalls * playRate),
             totalInvestedYen: totalInvestedYen
@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const br = item.bonusRounds || '';
                 const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
                 const diff = (item.diffBalls || 0).toLocaleString();
-                const ballEv = (item.ballEv || 0).toFixed(1);
+                const ballEv = (item.valuePerSpin || 0).toFixed(1);
                 const work = Math.round(item.dailyEV || 0).toLocaleString();
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
 
@@ -667,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const br = item.bonusRounds || '';
                 const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
                 const diff = (item.diffBalls || 0).toLocaleString();
-                const ballEv = (item.ballEv || 0).toFixed(1);
+                const ballEv = (item.valuePerSpin || 0).toFixed(1);
                 const work = Math.round(item.dailyEV || 0).toLocaleString();
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
 
