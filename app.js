@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
 
                 if (isCompactHistory) {
-                    const text = `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/仕事量￥${work}/持比${bRat}%`;
+                    const text = `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%`;
                     div.innerHTML = `
                         <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4;">
                             ${text}
