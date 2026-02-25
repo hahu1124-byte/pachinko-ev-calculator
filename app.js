@@ -215,7 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 過去の選択状態を復元、なければ先頭の機種を自動選択し、未選択による計算エラー（反映されない問題）を防止する
-        if (previousSelection !== "" && previousSelection !== null && machineData[previousSelection]) {
+        const savedMachineValue = machineSelect.getAttribute('data-saved-value');
+        if (savedMachineValue !== null && machineData[savedMachineValue]) {
+            machineSelect.value = savedMachineValue;
+            // 1度復元したら消去しておく（以降はユーザーの操作が優先）
+            machineSelect.removeAttribute('data-saved-value');
+        } else if (previousSelection !== "" && previousSelection !== null && machineData[previousSelection]) {
             machineSelect.value = previousSelection;
         } else if (machineData.length > 0) {
             machineSelect.value = 0;
@@ -726,7 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
                     text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n\n`;
                 });
-                text += `--------------------\n💰 合計期待値: ${formatCurrency(Math.round(totalEv))}`;
             }
 
             // URLエンコード
@@ -738,6 +742,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================
+    // 表示形式の切替ロジック
+    // ==========================================
+    const toggleFormatBtn = document.getElementById('toggle-format-btn');
+    if (toggleFormatBtn) {
+        toggleFormatBtn.addEventListener('click', () => {
+            isCompactHistory = !isCompactHistory;
+            toggleFormatBtn.textContent = isCompactHistory ? '詳細' : '簡略';
+            toggleFormatBtn.style.background = isCompactHistory ? '#3b82f6' : '#64748b'; // blue or slate
+            renderHistory();
+        });
+    }
+
     renderHistory();
     // 初期計算
     try {
@@ -745,4 +762,62 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.warn('Final calculateEV skipped or failed:', e);
     }
+
+    // ========== LocalStorage を用いた基本設定値の保存と復元 ==========
+    const STORAGE_KEY_SETTINGS = 'pachinkoSettings';
+
+    function saveSettings() {
+        const settings = {
+            playRate: document.querySelector('input[name="play-rate"]:checked').value,
+            exchangeRate: exchangeRateSelect.value,
+            customExchange: customExchangeInput.value,
+            machineSelect: machineSelect.value
+        };
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    }
+
+    // 各入力項目が変更されたら保存する
+    playRateRadios.forEach(radio => radio.addEventListener('change', saveSettings));
+    exchangeRateSelect.addEventListener('change', saveSettings);
+    customExchangeInput.addEventListener('input', saveSettings);
+    machineSelect.addEventListener('change', saveSettings);
+
+    function loadSettings() {
+        const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (saved) {
+            try {
+                const settings = JSON.parse(saved);
+
+                // 貸玉
+                if (settings.playRate) {
+                    const radio = document.querySelector(`input[name="play-rate"][value="${settings.playRate}"]`);
+                    if (radio) radio.checked = true;
+                }
+
+                // 交換率
+                if (settings.exchangeRate) {
+                    exchangeRateSelect.value = settings.exchangeRate;
+                    if (settings.exchangeRate === 'custom') {
+                        customExchangeInput.classList.remove('hidden');
+                        if (settings.customExchange) customExchangeInput.value = settings.customExchange;
+                    } else {
+                        customExchangeInput.classList.add('hidden');
+                    }
+                }
+
+                // 機種選択 (CSV読み込み後に適用する必要があるため、別途グローバル変数等で通知するか、
+                // ここではいったん値をセットするだけにとどめる。populateMachineSelect 内で復元処理を強化する)
+                if (settings.machineSelect !== undefined && settings.machineSelect !== "") {
+                    // 機種リストが構築された後に復元されるように、データ属性等に一時保存
+                    machineSelect.setAttribute('data-saved-value', settings.machineSelect);
+                }
+
+            } catch (e) {
+                console.error("Failed to load settings from localStorage", e);
+            }
+        }
+    }
+
+    // CSVロード前に一旦設定を復元する
+    loadSettings();
 });

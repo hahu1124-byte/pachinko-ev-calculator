@@ -194,20 +194,20 @@
                             style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
                         <button type="button" id="delete-all-btn"
                             style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全削除</button>
-                        <button type="button" id="toggle-format-btn"
-                            style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">詳細表示中</button>
                         <button type="button" id="share-line-btn"
                             style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
+                        <button type="button" id="toggle-format-btn"
+                            style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">詳細</button>
                     </div>
                 </div>
 
                 <!-- 旧来の簡易サマリー用（デフォルト非表示・JSで制御） -->
-                <div
-                    style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
-                    <p style="margin: 0; display: none; justify-content: space-between;"><span>合計 期待値:</span>
+                <div id="legacy-summary-container"
+                    style="display: none; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <p style="margin: 0; display: flex; justify-content: space-between;"><span>合計 期待値:</span>
                         <strong id="history-total-ev" class="positive">¥0</strong>
                     </p>
-                    <p style="margin: 0.5rem 0 0; display: none; justify-content: space-between;"><span>平均
+                    <p style="margin: 0.5rem 0 0; display: flex; justify-content: space-between;"><span>平均
                             持比単価:</span>
                         <strong id="history-avg-ball-ev">¥0.00</strong>
                     </p>
