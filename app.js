@@ -783,10 +783,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 text += `--------------------\n総計:\n`;
-                const sumBox = document.getElementById('history-summary-container');
-                if (sumBox) {
-                    text += sumBox.textContent;
-                }
+                const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+                availableRates.forEach(rate => {
+                    let sumSpins = 0, sumWork = 0, sumInvestK = 0, sumCashK = 0, sumBonusRounds = 0, sumAcquiredBalls = 0, sumDiffBalls = 0, sumBallYen = 0, sumTotalInvestYen = 0, count = 0;
+                    historyData.forEach(item => {
+                        if ((item.playRate || 4) == rate) {
+                            sumSpins += item.totalSpinsMeasured || 0;
+                            sumWork += item.dailyEV || 0;
+                            sumInvestK += item.totalInvestedK || 0;
+                            sumCashK += item.cashInvestedK || 0;
+                            sumBonusRounds += item.bonusRounds || 0;
+                            sumAcquiredBalls += item.acquiredBalls || 0;
+                            sumDiffBalls += item.diffBalls || 0;
+                            sumBallYen += item.positiveBallsYen || 0;
+                            sumTotalInvestYen += item.totalInvestedYen || 0;
+                            count++;
+                        }
+                    });
+                    const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
+                    const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
+                    const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
+                    const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
+
+                    text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n`;
+                });
             } else {
                 // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
 
