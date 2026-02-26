@@ -779,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
                     const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n`;
+                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
                 });
 
                 text += `--------------------\n総計:\n`;
@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                     const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
 
-                    text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n`;
+                    text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
                 });
             } else {
                 // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
@@ -835,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
                     text += `📈 平均回転率: ${avgTurn} / 1k\n`;
                     text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
-                    text += `--------------------\n`;
+                    text += `--------------------\n\n`;
                 });
 
                 // 2. 個々のデータを出す
