@@ -15,7 +15,7 @@ function handleShareLineClick(historyData, isCompactHistory) {
         shareData = historyData.filter(item => selectedIds.includes(item.id));
     } else {
         // 何も選択されていない場合は、最後に保存された履歴のみを対象とする
-        shareData = [historyData[historyData.length - 1]];
+        shareData = [historyData[0]];
     }
 
     let text = '📊 パチンコ期待値 履歴\n--------------------\n';
