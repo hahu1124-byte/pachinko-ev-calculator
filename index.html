@@ -104,14 +104,17 @@
                         </div>
                     </div>
 
-                    <div class="calculated-rate">
-                        <span>実測回転率 (1000円あたり): </span>
-                        <strong id="measured-turn-rate" class="highlight-value">-- 回転</strong>
-                    </div>
-                    <div class="calculated-rate" style="margin-top: 0.25rem;">
-                        <span style="font-size: 0.8rem; color: #94A3B8;">実測回転率 (4P1000円あたり): </span>
-                        <strong id="measured-turn-rate-4p" class="highlight-value"
-                            style="font-size: 0.9rem; color: #94A3B8;">-- 回転</strong>
+                    <div class="calculated-rate" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>実測回転率 (1000円あたり): </span>
+                            <strong id="measured-turn-rate" class="highlight-value">-- 回転</strong>
+                        </div>
+                        <div id="measured-turn-rate-4p-container"
+                            style="display: none; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.5rem;">
+                            <span style="font-size: 0.8rem; color: #94A3B8;">実測回転率 (4P1000円あたり): </span>
+                            <strong id="measured-turn-rate-4p" class="highlight-value"
+                                style="font-size: 0.9rem; color: #94A3B8;">-- 回転</strong>
+                        </div>
                     </div>
 
 
