@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyData = JSON.parse(localStorage.getItem('pachinkoHistory')) || [];
     let latestCalculation = null;
     let isCompactHistory = false; // true = 詳細(v38以降の区切り), false = 簡略(v37相当・デフォルト)
+    let currentSummaryRate = null; // 統計表示で現在選択されている貸玉レート
 
     // UI Toggle Logic
     exchangeRateSelect.addEventListener('change', (e) => {
@@ -560,16 +561,39 @@ document.addEventListener('DOMContentLoaded', () => {
             let sumBallYen = 0;
             let sumTotalInvestYen = 0;
 
+            // 履歴データから存在する貸玉レートを収集
+            const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+
+            // 初期の currentSummaryRate が設定されていない、または存在しないレートならリストの先頭(4など)をセット
+            if (!currentSummaryRate || !availableRates.includes(currentSummaryRate)) {
+                currentSummaryRate = availableRates.length > 0 ? availableRates[0] : 4;
+            }
+
+            // 統計パネル側のUI制御
+            const summaryLabel = document.getElementById('summary-rate-label');
+            const summaryControls = document.getElementById('summary-carousel-controls');
+            if (summaryLabel && summaryControls) {
+                if (historyData.length === 0) {
+                    summaryControls.style.display = 'none';
+                } else {
+                    summaryControls.style.display = 'flex';
+                    summaryLabel.textContent = `${currentSummaryRate}円 統計`;
+                }
+            }
+
             historyData.forEach((item, index) => {
-                sumInvestK += (item.totalInvestedK || 0);
-                sumSpins += (item.totalSpinsMeasured || 0);
-                sumCashK += (item.cashInvestedK || 0);
-                sumBonusRounds += (item.bonusRounds || 0);
-                sumAcquiredBalls += (item.acquiredBalls || 0);
-                sumDiffBalls += (item.diffBalls || 0);
-                sumWork += (item.dailyEV || 0);
-                sumBallYen += (item.positiveBallsYen || 0);
-                sumTotalInvestYen += (item.totalInvestedYen || 0);
+                // そのレートが現在の表示レート一致の時だけ統計データに加算
+                if ((item.playRate || 4) == currentSummaryRate) {
+                    sumInvestK += (item.totalInvestedK || 0);
+                    sumSpins += (item.totalSpinsMeasured || 0);
+                    sumCashK += (item.cashInvestedK || 0);
+                    sumBonusRounds += (item.bonusRounds || 0);
+                    sumAcquiredBalls += (item.acquiredBalls || 0);
+                    sumDiffBalls += (item.diffBalls || 0);
+                    sumWork += (item.dailyEV || 0);
+                    sumBallYen += (item.positiveBallsYen || 0);
+                    sumTotalInvestYen += (item.totalInvestedYen || 0);
+                }
 
                 const div = document.createElement('div');
                 div.className = 'history-item';
@@ -580,7 +604,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const mName = item.machineName || "不明";
                 const invK = (item.totalInvestedK || 0).toFixed(3);
                 const spins = item.totalSpinsMeasured || 0;
-                const turn = (item.turnRate || 0).toFixed(2);
+                let turn = (item.turnRate || 0).toFixed(2);
+
+                // 4円以外なら4P換算の回転率を併記する処理
+                if (item.playRate && item.playRate != 4) {
+                    const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
+                    turn = `${turn}(${turn4p})`;
+                }
+
                 const cshK = (item.cashInvestedK || 0).toFixed(2);
                 const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
                 const br = item.bonusRounds || '';
@@ -589,11 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ballEv = (item.valuePerSpin || 0).toFixed(1);
                 const work = Math.round(item.dailyEV || 0).toLocaleString();
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
+                const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
                 if (isCompactHistory) {
-                    const text = `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%`;
+                    const text = `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
                     div.innerHTML = `
-                        <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4;">
+                         <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4;">
                             ${text}
                         </div>
                         <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">
@@ -601,13 +633,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     div.style.padding = '0';
                     div.style.borderBottom = 'none';
+                    let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
+                    if (item.playRate && item.playRate != 4) {
+                        turnDisplayText += ` (4P換算: ${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
+                    }
                     div.innerHTML = `
                         <div class="history-item-header">
                             <h4>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></h4>
                             <input type="checkbox" class="history-checkbox" data-id="${item.id}">
                         </div>
                         <div class="history-item-body">
-                            <p><span>回転率:</span> <span>${(item.turnRate || 0).toFixed(2)} / 1k (${item.totalSpinsMeasured || 0}回転)</span></p>
+                            <p><span>回転率:</span> <span>${turnDisplayText} (${item.totalSpinsMeasured || 0}回転)</span></p>
                             <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
                             <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
                         </div>
@@ -624,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                 const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
-                const count = historyData.length;
+                const count = historyData.filter(i => (i.playRate || 4) == currentSummaryRate).length;
 
                 if (isCompactHistory) {
                     // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
@@ -726,7 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mName = item.machineName || "不明";
                     const invK = (item.totalInvestedK || 0).toFixed(3);
                     const spins = item.totalSpinsMeasured || 0;
-                    const turn = (item.turnRate || 0).toFixed(2);
+                    let turn = (item.turnRate || 0).toFixed(2);
+
+                    if (item.playRate && item.playRate != 4) {
+                        const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
+                        turn = `${turn}(${turn4p})`;
+                    }
+
                     const cshK = (item.cashInvestedK || 0).toFixed(2);
                     const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
                     const br = item.bonusRounds || '';
@@ -735,8 +777,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ballEv = (item.valuePerSpin || 0).toFixed(1);
                     const work = Math.round(item.dailyEV || 0).toLocaleString();
                     const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
+                    const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%\n\n`;
+                    text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
                 });
 
                 text += `--------------------\n総計:\n`;
@@ -747,32 +790,44 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
 
-                // 1. 統計データを先に出す(上の画面で表示されているサマリーから生成)
-                let totalEv = 0;
-                let sumSpins = 0;
-                let sumWork = 0;
-                let sumInvestK = 0;
+                // 1. 統計データを先に出す(全貸玉レートごとに分別)
+                const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
 
-                historyData.forEach(item => {
-                    totalEv += item.dailyEV || 0;
-                    sumSpins += item.totalSpinsMeasured || 0;
-                    sumWork += item.dailyEV || 0;
-                    sumInvestK += item.totalInvestedK || 0;
+                availableRates.forEach(rate => {
+                    let totalEv = 0;
+                    let sumSpins = 0;
+                    let sumWork = 0;
+                    let sumInvestK = 0;
+
+                    historyData.forEach(item => {
+                        if ((item.playRate || 4) == rate) {
+                            totalEv += item.dailyEV || 0;
+                            sumSpins += item.totalSpinsMeasured || 0;
+                            sumWork += item.dailyEV || 0;
+                            sumInvestK += item.totalInvestedK || 0;
+                        }
+                    });
+
+                    const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
+                    const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
+
+                    text += `【${rate}円 統計】\n`;
+                    text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
+                    text += `📈 平均回転率: ${avgTurn} / 1k\n`;
+                    text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
+                    text += `--------------------\n\n`;
                 });
-                const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
-                const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
-
-                text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
-                text += `📈 平均回転率: ${avgTurn} / 1k\n`;
-                text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
-                text += `--------------------\n\n`;
 
                 // 2. 個々のデータを出す
                 historyData.forEach(item => {
                     const dailyEV = item.dailyEV || 0;
+                    let turnText = `${(item.turnRate || 0).toFixed(2)}`;
+                    if (item.playRate && item.playRate != 4) {
+                        turnText += `(${((item.turnRate || 0) / (4 / item.playRate)).toFixed(2)})`;
+                    }
 
                     text += `🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
-                    text += `回転率: ${(item.turnRate || 0).toFixed(2)} / 1k (${item.totalSpinsMeasured || 0}回転)\n`;
+                    text += `回転率: ${turnText} / 1k (${item.totalSpinsMeasured || 0}回転)\n`;
                     text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
                     text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n\n`;
                 });
@@ -802,6 +857,32 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleFormatBtn.textContent = isCompactHistory ? '簡略' : '詳細';
             toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
             saveSettings(); // 切り替え状態も保存
+            renderHistory();
+        });
+    }
+
+    // ==========================================
+    // 統計切り替えロジック
+    // ==========================================
+    const summaryPrevBtn = document.getElementById('summary-prev-btn');
+    const summaryNextBtn = document.getElementById('summary-next-btn');
+
+    if (summaryPrevBtn && summaryNextBtn) {
+        summaryPrevBtn.addEventListener('click', () => {
+            const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+            if (availableRates.length <= 1) return;
+            let idx = availableRates.indexOf(currentSummaryRate);
+            idx = (idx - 1 + availableRates.length) % availableRates.length; // 前に戻る
+            currentSummaryRate = availableRates[idx];
+            renderHistory();
+        });
+
+        summaryNextBtn.addEventListener('click', () => {
+            const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+            if (availableRates.length <= 1) return;
+            let idx = availableRates.indexOf(currentSummaryRate);
+            idx = (idx + 1) % availableRates.length; // 次へ進む
+            currentSummaryRate = availableRates[idx];
             renderHistory();
         });
     }
