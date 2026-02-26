@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                     const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
 
-                    text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n`;
+                    text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
                 });
             } else {
                 // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
@@ -853,8 +853,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // URLエンコード
-            const encodedText = encodeURIComponent(text);
+            // URLエンコードの前に、末尾の不要な改行をすべて削除する
+            const encodedText = encodeURIComponent(text.trimEnd());
             const lineUrl = `https://line.me/R/msg/text/?${encodedText}`;
 
             // LINEを開く
