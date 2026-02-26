@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveHistoryBtn.addEventListener('click', () => {
             if (latestCalculation) {
                 try {
-                    historyData.push(latestCalculation);
+                    historyData.unshift(latestCalculation);
                     localStorage.setItem('pachinkoHistory', JSON.stringify(historyData));
                     renderHistory();
                     alert('保存しました！');
