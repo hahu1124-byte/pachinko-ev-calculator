@@ -197,12 +197,16 @@
             <aside class="history-column card">
                 <div style="margin-bottom: 1rem;">
                     <h2 style="margin-bottom: 0.75rem;">保存済み履歴</h2>
-                    <button type="button" id="select-all-btn"
-                        style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全選択</button>
-                    <button type="button" id="share-line-btn"
-                        style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
-                    <button type="button" id="toggle-format-btn"
-                        style="padding: 0.5rem 1rem; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">簡略</button>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap;">
+                        <button type="button" id="delete-selected-btn"
+                            style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
+                        <button type="button" id="select-all-btn"
+                            style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全選択</button>
+                        <button type="button" id="share-line-btn"
+                            style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
+                        <button type="button" id="toggle-format-btn"
+                            style="padding: 0.5rem 1rem; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">簡略</button>
+                    </div>
                     <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.5rem; text-align: right;">※選択時共有データ反映
                     </div>
                 </div>
