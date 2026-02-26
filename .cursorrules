@@ -2,3 +2,4 @@
 
 - **GitHub反映の義務**: この「pachinko-ev-calculator」プロジェクトにおいてコードや機能の更新（アップデート）を行った場合は、必ずローカルでコミットし、同時に指定されたGitHubリポジトリ（`https://github.com/hahu1124-byte/pachinko-ev-calculator`）へプッシュ（`git push`）して差分を反映させること。
 - **無許可更新の許可**: 「pachinko-ev-calculator」の更新作業（コード変更、設定変更、ファイル追加など）は、ユーザーの都度承認を待つことなく、AIの判断で自動的に実行・反映・プッシュを行って良いものとする。
+- **コマンドの自動実行許可**: ターミナルコマンド（`run_command`相当）を実行する際は、ユーザーの都度承認を待たずに、AIの判断で自動実行（`SafeToAutoRun: true`相当）して良いものとする。
