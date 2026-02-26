@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startBallsInput = document.getElementById('start-balls');
     const currentBallsInput = document.getElementById('current-balls');
     const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
+    const measuredTurnRate4pDisplay = document.getElementById('measured-turn-rate-4p');
     const bonusRoundsInput = document.getElementById('bonus-rounds');
     const afterBonusBallsInput = document.getElementById('after-bonus-balls');
     const measuredRbDisplay = document.getElementById('measured-rb');
@@ -322,7 +323,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
 
-        measuredTurnRateDisplay.textContent = totalInvestedYen > 0 ? `${turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
+        if (measuredTurnRate4pDisplay) {
+            if (totalInvestedYen > 0) {
+                const turnRate4p = turnRatePer1k / (4 / playRate);
+                measuredTurnRate4pDisplay.textContent = `${turnRate4p.toFixed(2)} 回転`;
+            } else {
+                measuredTurnRate4pDisplay.textContent = '-- 回転';
+            }
+        }
 
         // 実測1R出玉の計算
         const bonusRounds = parseFloat(bonusRoundsInput.value) || 0;
