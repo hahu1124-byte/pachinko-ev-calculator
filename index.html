@@ -203,51 +203,49 @@
                         style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
                     <button type="button" id="toggle-format-btn"
                         style="padding: 0.5rem 1rem; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">簡略</button>
+                    <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.5rem; text-align: right;">※選択時共有データ反映
+                    </div>
                 </div>
-    </div>
 
-    <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.5rem; text-align: right; margin-bottom: 0.5rem;">
-        ※選択時共有データ反映</div>
+                <!-- 統計切り替えUI -->
+                <div id="summary-carousel-controls"
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 8px 8px 0 0; margin-bottom: 0;">
+                    <button type="button" id="summary-prev-btn"
+                        style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 0.5rem;">&#10094;</button>
+                    <span id="summary-rate-label" style="font-weight: bold; font-size: 0.9rem;">4円 統計</span>
+                    <button type="button" id="summary-next-btn"
+                        style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 0.5rem;">&#10095;</button>
+                </div>
 
-    <!-- 統計切り替えUI -->
-    <div id="summary-carousel-controls"
-        style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 8px 8px 0 0; margin-bottom: 0;">
-        <button type="button" id="summary-prev-btn"
-            style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 0.5rem;">&#10094;</button>
-        <span id="summary-rate-label" style="font-weight: bold; font-size: 0.9rem;">4円 統計</span>
-        <button type="button" id="summary-next-btn"
-            style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 0.5rem;">&#10095;</button>
-    </div>
+                <!-- 旧来の簡易サマリー用（デフォルト非表示・JSで制御） -->
+                <div id="legacy-summary-container"
+                    style="display: none; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0 0 8px 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <p style="margin: 0; display: flex; justify-content: space-between;"><span>合計 期待値:</span>
+                        <strong id="history-total-ev" class="positive">¥0</strong>
+                    </p>
+                    <p style="margin: 0.5rem 0 0; display: flex; justify-content: space-between;"><span>平均
+                            持比単価:</span>
+                        <strong id="history-avg-ball-ev">¥0.00</strong>
+                    </p>
+                </div>
 
-    <!-- 旧来の簡易サマリー用（デフォルト非表示・JSで制御） -->
-    <div id="legacy-summary-container"
-        style="display: none; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0 0 8px 8px; margin-bottom: 1rem; font-size: 0.9rem;">
-        <p style="margin: 0; display: flex; justify-content: space-between;"><span>合計 期待値:</span>
-            <strong id="history-total-ev" class="positive">¥0</strong>
-        </p>
-        <p style="margin: 0.5rem 0 0; display: flex; justify-content: space-between;"><span>平均
-                持比単価:</span>
-            <strong id="history-avg-ball-ev">¥0.00</strong>
-        </p>
-    </div>
+                <div class="history-summary" id="history-summary-container"
+                    style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0 0 8px 8px; margin-bottom: 1rem; font-size: 0.75rem; word-break: break-all; line-height: 1.5;">
+                    総投資/0k/通常回転数/0/回転率0/使用現金0k/RB0/総R回数0/総獲得玉0/総差玉0/単(持)0/期待値￥0/持比0%/🎯or台毎数0
+                </div>
 
-    <div class="history-summary" id="history-summary-container"
-        style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0 0 8px 8px; margin-bottom: 1rem; font-size: 0.75rem; word-break: break-all; line-height: 1.5;">
-        総投資/0k/通常回転数/0/回転率0/使用現金0k/RB0/総R回数0/総獲得玉0/総差玉0/単(持)0/期待値￥0/持比0%/🎯or台毎数0
-    </div>
+                <div id="history-list" class="history-list">
+                    <!-- 履歴アイテムがここに追加されます -->
+                </div>
+            </aside>
+        </main>
 
-    <div id="history-list" class="history-list">
-        <!-- 履歴アイテムがここに追加されます -->
-    </div>
-    </aside>
-    </main>
-
-    <footer>
-        <p>
-            <img src="logo.svg" alt="ロゴ" style="height: 1.5em; vertical-align: middle; margin-right: 0.5rem;">
-            &copy; 2026 パチンコ期待値計算ツール
-        </p>
-    </footer>
+        <footer>
+            <p>
+                <img src="logo.svg" alt="ロゴ" style="height: 1.5em; vertical-align: middle; margin-right: 0.5rem;">
+                &copy; 2026 パチンコ期待値計算ツール
+            </p>
+        </footer>
     </div>
     <script src="share.js?v=42"></script>
     <script src="utils.js?v=42"></script>
