@@ -673,7 +673,7 @@ footer {
 }
 
 .compact-machine {
-    color: var(--text-main);
+    color: var(--primary);
     font-weight: bold;
     flex: 1;
     min-width: 0;
