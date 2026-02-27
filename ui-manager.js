@@ -104,8 +104,9 @@ const UIManager = {
             const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
             const dateTime = showDate ? `<span class="compact-date">${dateMeta}</span>` : '';
-            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}</span></div>`;
-            const statsText = `総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%${rateSuffix}`;
+            const rateText = (item.playRate && item.playRate != 4) ? ` (${item.playRate}円)` : "";
+            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}${rateText}</span></div>`;
+            const statsText = `総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%`;
 
             div.innerHTML = `
                 <div class="history-item-compact-container">
@@ -123,7 +124,7 @@ const UIManager = {
                 <div class="history-item-header">
                     <div class="header-left">
                         ${showDate ? `<div class="history-date-label">${dateMeta}</div>` : ''}
-                        <h4>${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
+                        <h4 class="history-machine-title">${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
                     </div>
                     <div class="header-right">
                         <input type="checkbox" class="history-checkbox" data-id="${item.id}">

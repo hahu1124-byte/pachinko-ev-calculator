@@ -484,9 +484,9 @@ footer {
 .history-item-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 0.35rem;
+    padding: 0.25rem 0;
     margin-bottom: 0.35rem;
 }
 
@@ -495,7 +495,9 @@ footer {
     margin: 0;
     font-size: 0.95rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
 }
 
 .history-date-label {
@@ -653,7 +655,6 @@ footer {
 }
 
 .compact-machine {
-    color: var(--accent);
     font-weight: bold;
 }
 
@@ -666,6 +667,7 @@ footer {
     right: 0.5rem;
     top: 50%;
     transform: translateY(-50%) scale(1.1);
+    margin: 0;
 }
 
 .history-summary-container {
