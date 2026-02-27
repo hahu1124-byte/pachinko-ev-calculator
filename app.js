@@ -1,4 +1,4 @@
-// [v60] 2026-02-27 - 統計オーラ演出(4段階グラデーション)のCSS適用修正
+// [v61] 2026-02-27 - ログ管理ルールの刷新（最新を上、ファイル分割導入）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
