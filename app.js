@@ -1,4 +1,4 @@
-// [v64] 2026-02-27 - LINE共有フォーマットの再調整（見出しラベル削除）
+// [v65] 2026-02-27 - 履歴詳細のチェックボックス修正と簡略表示のレイアウト調整
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
