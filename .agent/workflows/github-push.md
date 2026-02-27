@@ -1,6 +1,8 @@
 ---
 description: pachinko-ev-calculatorの更新とGitHubへのプッシュ
 ---
+# GitHubプッシュワークフロー
+
 // turbo-all
 
 1. 修正箇所のコード内に、処理の意図や内容を説明する日本語コメントが過不足なく追記されているか確認する

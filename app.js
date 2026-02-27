@@ -1,4 +1,4 @@
-// [v75] 2026-02-27 - 主要ロジックの意図・処理内容に関する日本語コメントの拡充
+// [v76] 2026-02-27 - Markdown Lint エラー（テーブル形式、見出し構造）の修正
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
