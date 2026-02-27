@@ -88,6 +88,8 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
             const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
             availableRates.forEach(rate => {
                 let sumSpins = 0, sumWork = 0, sumInvestK = 0, sumCashK = 0, sumBonusRounds = 0, sumAcquiredBalls = 0, sumDiffBalls = 0, sumBallYen = 0, sumTotalInvestYen = 0, count = 0;
+                const machineCounts = {};
+                const machinesOldestFirst = [];
                 shareData.forEach(item => {
                     if ((item.playRate || 4) == rate) {
                         sumSpins += item.totalSpinsMeasured || 0;
@@ -100,15 +102,23 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                         sumBallYen += item.positiveBallsYen || 0;
                         sumTotalInvestYen += item.totalInvestedYen || 0;
                         count++;
+
+                        const mName = item.machineName || "不明";
+                        if (!machineCounts[mName]) {
+                            machineCounts[mName] = 0;
+                            machinesOldestFirst.unshift(mName); // shareDataはunshiftで追加された逆順(最新順)なので、unshiftで戻すと古い順になる
+                        }
+                        machineCounts[mName]++;
                     }
                 });
+                const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
                 const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
                 const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                 const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
 
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
-                text += `${dateStat}【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
+                text += `${dateStat}${machineInfoText}\n【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
             });
             text = text.trimEnd();
         } else {
@@ -119,6 +129,8 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 let sumSpins = 0;
                 let sumWork = 0;
                 let sumInvestK = 0;
+                const machineCounts = {};
+                const machinesOldestFirst = [];
 
                 shareData.forEach(item => {
                     if ((item.playRate || 4) == rate) {
@@ -126,14 +138,22 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                         sumSpins += item.totalSpinsMeasured || 0;
                         sumWork += item.dailyEV || 0;
                         sumInvestK += item.totalInvestedK || 0;
+
+                        const mName = item.machineName || "不明";
+                        if (!machineCounts[mName]) {
+                            machineCounts[mName] = 0;
+                            machinesOldestFirst.unshift(mName);
+                        }
+                        machineCounts[mName]++;
                     }
                 });
 
+                const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
                 const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
 
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
-                text += `${dateStat}【${rate}円 統計】\n`;
+                text += `${dateStat}機種内訳: ${machineInfoText}\n【${rate}円 統計】\n`;
                 text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
                 text += `📈 平均回転率: ${avgTurn} / 1k\n`;
                 text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
