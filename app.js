@@ -1,4 +1,4 @@
-// [v62] 2026-02-27 - コードの是正・ブラッシュアップ（リファクタリング、通貨フォーマット統一）
+// [v63] 2026-02-27 - LINE共有内容のフォーマット調整（区切り線変更、空行詰め）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
