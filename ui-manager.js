@@ -103,10 +103,15 @@ const UIManager = {
             const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
             const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-            const text = `${showDate ? dateMeta + '\n' : ''}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%${rateSuffix}`;
+            const dateTime = showDate ? `<span class="compact-date">${dateMeta}</span>` : '';
+            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}</span></div>`;
+            const statsText = `総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%${rateSuffix}`;
 
             div.innerHTML = `
-                <div class="history-item-compact-container">${text}</div>
+                <div class="history-item-compact-container">
+                    ${headerRow}
+                    <div class="compact-stats">${statsText}</div>
+                </div>
                 <input type="checkbox" class="history-checkbox history-item-checkbox-compact" data-id="${item.id}">
             `;
         } else {
@@ -116,11 +121,13 @@ const UIManager = {
             }
             div.innerHTML = `
                 <div class="history-item-header">
-                    <h4>
-                        ${showDate ? `<span style="font-size:0.7rem; color:var(--text-muted); margin-bottom: 2px;">${dateMeta}</span>` : ''}
-                        <span>${mName} <span style="font-size:0.75rem; color:var(--text-muted);">(${item.playRate || "?"}円)</span></span>
-                    </h4>
-                    <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: static; transform: none; flex-shrink: 0;">
+                    <div class="header-left">
+                        ${showDate ? `<div class="history-date-label">${dateMeta}</div>` : ''}
+                        <h4>${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
+                    </div>
+                    <div class="header-right">
+                        <input type="checkbox" class="history-checkbox" data-id="${item.id}">
+                    </div>
                 </div>
                 <div class="history-item-body">
                     <p><span>回転率:</span> <span>${turnDisplayText} (${spins}回転)</span></p>

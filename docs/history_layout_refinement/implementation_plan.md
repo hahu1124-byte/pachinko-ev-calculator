@@ -1,41 +1,25 @@
-# コードの是正・ブラッシュアップ (v62)
+# 履歴表示の改善計画
 
-これまでの急速な機能追加（v56〜v61）によるコードの乱れを是正し、保守性とパフォーマンスを向上させます。
+履歴表示の利便性向上のため、表示不具合の修正とレイアウトの微調整を行います。
 
-## 提案される変更（自動承認・即実行）
+## 変更内容
 
-### UIマネージャーのリファクタリング
+### [ui-manager.js](file:///h:/gravity/pachinko-ev-calculator/ui-manager.js)
 
-#### [MODIFY] [ui-manager.js](file:///h:/gravity/pachinko-ev-calculator/ui-manager.js)
+#### 1. 詳細履歴のチェックボックス表示修正
 
-- `renderHistory` の巨大なロジックを分割。
-  - 統計計算、個別の履歴アイテム描画、サマリー更新を別メソッドに抽出。
-- インラインスタイルを可能な限り排除し、`styles.css` のクラスへ移行。
-- サマリーオーラの適用ロジックを一箇所に集約。
-- 重複していたカウントアップアニメーションロジックを `animateEV` メ法に統一。
+- `display: none` または z-index の問題で隠れている可能性があるため、`_createHistoryItemElement` 内のスタイルを確認し、確実に見えるように調整します。
+- 現在のコードでは `style="position: static; transform: none; flex-shrink: 0;"` が付与されていますが、親要素のレイアウト（`history-item-header`）との兼ね合いを再確認します。
 
-### スタイルシートの最適化
+#### 2. 簡略履歴のレイアウト調整（v55風への回帰）
 
-#### [MODIFY] [styles.css](file:///h:/gravity/pachinko-ev-calculator/styles.css)
+- ユーザーの要望に基づき、日時と機種名の表示方法を調整します。
+- 現在は `${showDate ? dateMeta + '\n' : ''}${mName}/...` となっていますが、これをより視認性の高い形式（以前のスタイル）に変更します。
 
-- `ui-manager.js` から抽出したスタイルをクラスとして定義（例: `.history-item-compact`, `.summary-details`）。
-- オーラの色などを CSS 変数 (`:root`) で管理するように変更。
-- 重複するプロパティの整理。
+## 検証計画
 
-### ユーティリティとメインロジックの整合
+### 手動確認
 
-#### [MODIFY] [utils.js](file:///h:/gravity/pachinko-ev-calculator/utils.js) / [app.js](file:///h:/gravity/pachinko-ev-calculator/app.js)
-
-- `formatCurrency` の変更に伴う、他箇所の二重 `￥` 表記の有無をチェックし修正。
-
-### リリース工程（厳守）
-
-- **バージョン更新**: v62
-- **GitHub反映**: プッシュおよびタグ付け
-
-## 検証プラン
-
-### 自動検証
-
-- 既存機能（履歴表示、期待値計算、LINE共有）が壊れていないことを確認。
-- 開発者ツールでエラーが出ていないことを確認。
+1. 履歴を保存し、「詳細」表示において各アイテムの右側にチェックボックスが表示され、操作可能であることを確認する。
+2. 「簡略」表示に切り替え、日時と機種名が意図した形式で表示されていることを確認する。
+3. チェックボックスを選択し、一括削除や統計への反映が正しく行われることを確認する。
