@@ -93,12 +93,12 @@ const UIManager = {
                         turnDisplayText += ` (4P換算: ${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
                     }
                     div.innerHTML = `
-                        <div class="history-item-header">
-                            <h4 style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <div class="history-item-header" style="position: relative; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <h4 style="display: flex; flex-direction: column; align-items: flex-start; flex: 1; margin-right: 1rem;">
                                 ${showDate ? `<span style="font-size:0.7rem; color:#94A3B8; margin-bottom: 2px;">${formatHistoryDate(item.id)}</span>` : ''}
                                 <span>${mName} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></span>
                             </h4>
-                            <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);">
+                            <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: static; transform: none; flex-shrink: 0;">
                         </div>
                         <div class="history-item-body">
                             <p><span>回転率:</span> <span>${turnDisplayText} (${spins}回転)</span></p>

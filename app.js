@@ -1,4 +1,4 @@
-// [v56] 2026-02-27 - 履歴レイアウトの余白調整（詳細モード）
+// [v57] 2026-02-27 - 履歴チェックボックスの配置修正（重なり解消）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
