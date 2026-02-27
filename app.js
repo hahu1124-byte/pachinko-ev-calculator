@@ -391,13 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
-            // === I19相当: 現金単価 (期待度G23の条件分岐反映) ===
+            // === I19相当: 現金単価 (期待度G23の2乗による条件分岐反映) ===
             // ユーザー指定式: ((1R出玉 / 遊トータル確率 * 換金単価) - (1000 / 実測回転率 ))*(250 / 1000円あたりの玉数)
-            // この値が0以下なら G23で割る、それ以外なら掛ける
+            // この値が0以下なら G23^2 で割る、それ以外なら G23^2 を掛ける
             const rawI19Base = (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k));
+            const yutimeExpectancySq = Math.pow(yutimeExpectancy, 2);
             const rawI19 = rawI19Base <= 0
-                ? (yutimeExpectancy > 0 ? rawI19Base / yutimeExpectancy : rawI19Base)
-                : rawI19Base * yutimeExpectancy;
+                ? (yutimeExpectancySq > 0 ? rawI19Base / yutimeExpectancySq : rawI19Base)
+                : rawI19Base * yutimeExpectancySq;
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
