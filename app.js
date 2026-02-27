@@ -1,4 +1,4 @@
-// [v49] 2026-02-27 - 履歴消失バグの修正（createElementの復元）
+// [v50] 2026-02-27 - 統計データの選択項目反映・機種内訳フォーマット変更（○台）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -648,12 +648,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            const machineCounts = {};
-            const machinesOldestFirst = [];
+            const isFilterActive = checkedIds.length > 0;
 
             historyData.forEach((item, index) => {
-                // そのレートが現在の表示レート一致の時だけ統計データに加算
-                if ((item.playRate || 4) == currentSummaryRate) {
+                // そのレートが現在の表示レート一致、かつ「フィルタ非アクティブ」または「チェック入り」の時のみ統計加算
+                if ((item.playRate || 4) == currentSummaryRate && (!isFilterActive || checkedIds.includes(item.id))) {
                     sumInvestK += (item.totalInvestedK || 0);
                     sumSpins += (item.totalSpinsMeasured || 0);
                     sumCashK += (item.cashInvestedK || 0);
@@ -666,10 +665,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 機種内訳の集計（古い順）: historyDataは[newest...oldest]なので後ろから回る
+            // 機種内訳の集計（古い順）: フィルタを考慮
             for (let i = historyData.length - 1; i >= 0; i--) {
                 const item = historyData[i];
-                if ((item.playRate || 4) == currentSummaryRate) {
+                if ((item.playRate || 4) == currentSummaryRate && (!isFilterActive || checkedIds.includes(item.id))) {
                     const name = item.machineName || "不明";
                     if (!machineCounts[name]) {
                         machineCounts[name] = 0;
@@ -678,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     machineCounts[name]++;
                 }
             }
-            const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]})`).join(' / ');
+            const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
 
             historyData.forEach((item, index) => {
                 const div = document.createElement('div');
@@ -746,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                 const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
-                const count = historyData.filter(i => (i.playRate || 4) == currentSummaryRate).length;
+                const count = historyData.filter(i => (i.playRate || 4) == currentSummaryRate && (!isFilterActive || checkedIds.includes(i.id))).length;
 
                 if (isCompactHistory) {
                     // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
