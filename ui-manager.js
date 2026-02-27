@@ -113,7 +113,7 @@ const UIManager = {
                     ${headerRow}
                     <div class="compact-stats">${statsText}</div>
                 </div>
-                <input type="checkbox" class="history-checkbox history-item-checkbox-compact" data-id="${item.id}">
+                <input type="checkbox" class="history-checkbox" data-id="${item.id}">
             `;
         } else {
             let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;

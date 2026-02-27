@@ -1,4 +1,4 @@
-// [v68] 2026-02-27 - 履歴チェックボックス位置の完全固定 (absolute) と文字色回帰
+// [v69] 2026-02-27 - 簡略履歴のチェックボックス表示修正 (header-right 依存の解消)
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
