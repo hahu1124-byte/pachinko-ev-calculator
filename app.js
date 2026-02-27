@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : prob;
 
             // 交換率係数 (等価比: 例 275/250 = 1.1)
-            const exchangeFactorVal = exchangeRate / 250;
+            const exchangeFactorVal = exchangeRateBalls / 250;
 
             // === I18相当: 通常持玉単価 (期待度G23の2乗と交換率係数を反映) ===
             // ユーザー指定式: ((((1R出玉 / 遊トータル確率) - (ballsPer1k / 実測回転率)) * 4) / (ballsPer1k / 250)) * G23^2 / 交換率
