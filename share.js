@@ -1,5 +1,3 @@
-let shareTargetUrl = 'https://line.me/R/msg/text/?';
-
 // 統計情報を取得する共通関数
 function getStatsByRate(shareData, rate) {
     let stats = {
@@ -162,6 +160,15 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
     }
 
     const encodedText = encodeURIComponent(text.trimEnd());
-    const lineUrl = `${shareTargetUrl}${encodedText}`;
-    window.open(lineUrl, '_blank');
+    const lineUrl = `line://msg/text/${encodedText}`;
+
+    // スマホブラウザでのポップアップブロックを回避するため、window.open ではなく location.href を使用
+    window.location.href = lineUrl;
+
+    // 万が一 line:// スキームで反応しない環境（古いPCブラウザ等）のためのフォールバック
+    setTimeout(() => {
+        if (document.hasFocus()) {
+            window.open(`https://line.me/R/msg/text/?${encodedText}`, '_blank');
+        }
+    }, 500);
 }
