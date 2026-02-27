@@ -1,4 +1,4 @@
-// [v73] 2026-02-27 - 簡略/詳細のモード認識修正（文字色の逆転解消）
+// [v74] 2026-02-27 - 簡略チェックボックスのインライン化、全コードにモード識別コメント追記
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;

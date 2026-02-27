@@ -92,6 +92,11 @@ const UIManager = {
 
         const dateMeta = showDate ? formatHistoryDate(item.id) : '';
 
+        // ==========================================
+        // 【詳細モード】isCompact=true / ボタン表示「簡略」
+        //  → compact表示（全データ1行詰め込み）
+        //  → 機種名の色: 白 (--text-main)
+        // ==========================================
         if (isCompact) {
             const cshK = (item.cashInvestedK || 0).toFixed(2);
             const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
@@ -114,6 +119,11 @@ const UIManager = {
                     <div class="compact-stats">${statsText}</div>
                 </div>
             `;
+            // ==========================================
+            // 【簡略モード】isCompact=false / ボタン表示「詳細」
+            //  → 展開表示（回転率/持比/期待値の3項目）
+            //  → 機種名の色: 紫 (--primary)
+            // ==========================================
         } else {
             let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
             if (item.playRate && item.playRate != 4) {
@@ -125,13 +135,13 @@ const UIManager = {
                         ${showDate ? `<div class="history-date-label">${dateMeta}</div>` : ''}
                         <h4 class="history-machine-title">${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
                     </div>
+                    <input type="checkbox" class="history-checkbox history-checkbox-inline" data-id="${item.id}">
                 </div>
                 <div class="history-item-body">
                     <p><span>回転率:</span> <span>${turnDisplayText} (${spins}回転)</span></p>
                     <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
                     <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1.1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
                 </div>
-                <input type="checkbox" class="history-checkbox" data-id="${item.id}">
             `;
         }
         return div;

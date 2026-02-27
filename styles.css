@@ -470,6 +470,9 @@ footer {
     overflow-y: auto;
 }
 
+/* ========================================
+   共通: 履歴アイテム
+   ======================================== */
 .history-item {
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid var(--border);
@@ -479,32 +482,33 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    position: relative !important;
-    /* 配置基準を確実に固定 */
+    position: relative;
 }
 
+/* ========================================
+   【簡略モード】isCompact=false / ボタン「詳細」
+   展開表示（回転率/持比/期待値の3項目）
+   ======================================== */
 .history-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* centerに変更 */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.35rem 0;
-    /* 少し余裕を持たせる */
     margin-bottom: 0.35rem;
-    padding-right: 40px;
-    /* チェックボックス用の余白 */
 }
 
+/* 簡略モード: 機種名は紫 (--primary) */
 .history-item-header h4 {
     color: var(--primary);
-    /* 展開表示(ユーザーの「簡略」)の機種名は紫 */
     margin: 0;
     font-size: 0.95rem;
     display: flex;
     flex-direction: row;
     align-items: baseline;
     gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
 
 .history-date-label {
@@ -523,18 +527,16 @@ footer {
     flex-direction: column;
 }
 
-/* .header-right は廃止（チェックボックスを独立配置にしたため） */
-
-.history-checkbox {
-    position: absolute !important;
-    right: 0.75rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+/* 簡略モード: チェックボックスを機種名と同じ行にインライン配置するための共通スタイル */
+/* .history-checkbox-inline クラスで position:static に上書きする */
+.history-checkbox-inline {
+    position: static !important;
+    transform: none !important;
+    flex-shrink: 0;
+    width: 16px !important;
+    height: 16px !important;
     margin: 0 !important;
     cursor: pointer;
-    z-index: 100 !important;
-    width: 18px !important;
-    height: 18px !important;
 }
 
 .history-item-body p {
@@ -649,7 +651,10 @@ footer {
     transition: color 0.5s ease;
 }
 
-/* リファクタリングで追加したクラス (v62) */
+/* ========================================
+   【詳細モード】isCompact=true / ボタン「簡略」
+   compact表示（全データ1行詰め込み）
+   ======================================== */
 .history-item-compact-container {
     font-size: 0.8rem;
     word-break: break-all;
@@ -672,9 +677,9 @@ footer {
     margin-right: 8px;
 }
 
+/* 詳細モード: 機種名は白 (--text-main) */
 .compact-machine {
     color: var(--text-main);
-    /* compact表示(ユーザーの「詳細」)の機種名は白 */
     font-weight: bold;
     flex: 1;
     min-width: 0;
