@@ -388,7 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
-            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
+            // === I19相当: 現金単価 ===
+            // 消費金額も4円ベース(1000円)からレート基準の可変金額へ
+            const cashInvestPer1k = (ballsPer1k / 250) * 1000;
+            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (cashInvestPer1k / turnRatePer1k)) * (250 / ballsPer1k);
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
