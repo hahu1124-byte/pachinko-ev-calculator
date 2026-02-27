@@ -654,15 +654,16 @@ footer {
     font-size: 0.8rem;
     word-break: break-all;
     padding: 0.25rem 0.75rem;
-    padding-right: 50px;
-    /* チェックボックス用の余白 */
     line-height: 1.4;
 }
 
 .compact-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 2px;
+    gap: 6px;
 }
 
 .compact-date {
@@ -674,6 +675,21 @@ footer {
 .compact-machine {
     color: var(--text-main);
     font-weight: bold;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-checkbox-inline {
+    position: static !important;
+    transform: none !important;
+    flex-shrink: 0;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    cursor: pointer;
 }
 
 .compact-stats {

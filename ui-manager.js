@@ -105,7 +105,7 @@ const UIManager = {
 
             const dateTime = showDate ? `<span class="compact-date">${dateMeta}</span>` : '';
             const rateText = (item.playRate && item.playRate != 4) ? ` (${item.playRate}円)` : "";
-            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}${rateText}</span></div>`;
+            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}${rateText}</span><input type="checkbox" class="history-checkbox history-checkbox-inline" data-id="${item.id}"></div>`;
             const statsText = `総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%`;
 
             div.innerHTML = `
@@ -113,7 +113,6 @@ const UIManager = {
                     ${headerRow}
                     <div class="compact-stats">${statsText}</div>
                 </div>
-                <input type="checkbox" class="history-checkbox" data-id="${item.id}">
             `;
         } else {
             let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
