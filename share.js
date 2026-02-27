@@ -1,4 +1,42 @@
-let shareTargetUrl = 'https://line.me/R/msg/text/?';
+// 統計情報を取得する共通関数
+function getStatsByRate(shareData, rate) {
+    let stats = {
+        sumSpins: 0, sumWork: 0, sumInvestK: 0, sumCashK: 0,
+        sumBonusRounds: 0, sumAcquiredBalls: 0, sumDiffBalls: 0,
+        sumBallYen: 0, sumTotalInvestYen: 0, count: 0,
+        machineCounts: {}, machinesOldestFirst: []
+    };
+
+    shareData.forEach(item => {
+        if ((item.playRate || 4) == rate) {
+            stats.sumSpins += item.totalSpinsMeasured || 0;
+            stats.sumWork += item.dailyEV || 0;
+            stats.sumInvestK += item.totalInvestedK || 0;
+            stats.sumCashK += item.cashInvestedK || 0;
+            stats.sumBonusRounds += item.bonusRounds || 0;
+            stats.sumAcquiredBalls += item.acquiredBalls || 0;
+            stats.sumDiffBalls += item.diffBalls || 0;
+            stats.sumBallYen += item.positiveBallsYen || 0;
+            stats.sumTotalInvestYen += item.totalInvestedYen || 0;
+            stats.count++;
+
+            const mName = item.machineName || "不明";
+            if (!stats.machineCounts[mName]) {
+                stats.machineCounts[mName] = 0;
+                stats.machinesOldestFirst.unshift(mName); // shareDataは最新順なので、unshiftで戻すと古い順になる
+            }
+            stats.machineCounts[mName]++;
+        }
+    });
+
+    stats.machineInfoText = stats.machinesOldestFirst.map(name => `${name} (${stats.machineCounts[name]}台)`).join(' / ');
+    stats.avgTurn = stats.sumInvestK > 0 ? (stats.sumSpins / stats.sumInvestK).toFixed(2) : "0.00";
+    stats.avgRb = stats.sumBonusRounds > 0 ? (stats.sumAcquiredBalls / stats.sumBonusRounds).toFixed(1) : "0";
+    stats.avgBallEv = stats.sumSpins > 0 ? (stats.sumWork / stats.sumSpins).toFixed(1) : "0";
+    stats.avgBallRatio = stats.sumTotalInvestYen > 0 ? ((stats.sumBallYen / stats.sumTotalInvestYen) * 100).toFixed(1) : "0.0";
+
+    return stats;
+}
 
 // --- 共有ロジック ---
 function handleShareLineClick(historyData, isCompactHistory, showDate) {
@@ -57,6 +95,8 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
             text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n`;
         }
     } else {
+        const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+
         if (isCompactHistory) {
             shareData.forEach(item => {
                 const dateLine = showDate ? `${formatHistoryDate(item.id)}\n` : '';
@@ -83,80 +123,21 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
             });
             text = text.trimEnd() + '\n';
-
             text += `--------------------\n総計:\n`;
-            const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+
             availableRates.forEach(rate => {
-                let sumSpins = 0, sumWork = 0, sumInvestK = 0, sumCashK = 0, sumBonusRounds = 0, sumAcquiredBalls = 0, sumDiffBalls = 0, sumBallYen = 0, sumTotalInvestYen = 0, count = 0;
-                const machineCounts = {};
-                const machinesOldestFirst = [];
-                shareData.forEach(item => {
-                    if ((item.playRate || 4) == rate) {
-                        sumSpins += item.totalSpinsMeasured || 0;
-                        sumWork += item.dailyEV || 0;
-                        sumInvestK += item.totalInvestedK || 0;
-                        sumCashK += item.cashInvestedK || 0;
-                        sumBonusRounds += item.bonusRounds || 0;
-                        sumAcquiredBalls += item.acquiredBalls || 0;
-                        sumDiffBalls += item.diffBalls || 0;
-                        sumBallYen += item.positiveBallsYen || 0;
-                        sumTotalInvestYen += item.totalInvestedYen || 0;
-                        count++;
-
-                        const mName = item.machineName || "不明";
-                        if (!machineCounts[mName]) {
-                            machineCounts[mName] = 0;
-                            machinesOldestFirst.unshift(mName); // shareDataはunshiftで追加された逆順(最新順)なので、unshiftで戻すと古い順になる
-                        }
-                        machineCounts[mName]++;
-                    }
-                });
-                const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
-                const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
-                const avgRb = sumBonusRounds > 0 ? (sumAcquiredBalls / sumBonusRounds).toFixed(1) : "0";
-                const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
-                const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
-
+                const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
-                text += `${dateStat}${machineInfoText}\n【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
+                text += `${dateStat}${s.machineInfoText}\n【${rate}円】総投資/${s.sumInvestK.toFixed(3)}k/通常回転数/${s.sumSpins}/回転率${s.avgTurn}/使用現金${s.sumCashK.toFixed(2)}k/RB${s.avgRb}/総R回数${s.sumBonusRounds}/総獲得玉${Math.round(s.sumAcquiredBalls)}/総差玉${s.sumDiffBalls.toLocaleString()}/単(持)${s.avgBallEv}/期待値￥${Math.round(s.sumWork).toLocaleString()}/持比${s.avgBallRatio}%/🎯or台毎数${s.count}\n\n`;
             });
-            text = text.trimEnd();
         } else {
-            const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
-
             availableRates.forEach(rate => {
-                let totalEv = 0;
-                let sumSpins = 0;
-                let sumWork = 0;
-                let sumInvestK = 0;
-                const machineCounts = {};
-                const machinesOldestFirst = [];
-
-                shareData.forEach(item => {
-                    if ((item.playRate || 4) == rate) {
-                        totalEv += item.dailyEV || 0;
-                        sumSpins += item.totalSpinsMeasured || 0;
-                        sumWork += item.dailyEV || 0;
-                        sumInvestK += item.totalInvestedK || 0;
-
-                        const mName = item.machineName || "不明";
-                        if (!machineCounts[mName]) {
-                            machineCounts[mName] = 0;
-                            machinesOldestFirst.unshift(mName);
-                        }
-                        machineCounts[mName]++;
-                    }
-                });
-
-                const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
-                const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
-                const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
-
+                const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
-                text += `${dateStat}機種内訳: ${machineInfoText}\n【${rate}円 統計】\n`;
-                text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
-                text += `📈 平均回転率: ${avgTurn} / 1k\n`;
-                text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
+                text += `${dateStat}機種内訳: ${s.machineInfoText}\n【${rate}円 統計】\n`;
+                text += `💰 合計期待値: ${formatCurrency(Math.round(s.sumWork))}\n`;
+                text += `📈 平均回転率: ${s.avgTurn} / 1k\n`;
+                text += `✨ 平均持比単価: ¥${s.avgBallEv}\n`;
                 text += `--------------------\n\n`;
             });
             text = text.trimEnd() + '\n';
@@ -174,14 +155,11 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
                 text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n\n`;
             });
-            text = text.trimEnd();
         }
+        text = text.trimEnd();
     }
 
-    // URLエンコードの前に、末尾の不要な改行をすべて削除する
     const encodedText = encodeURIComponent(text.trimEnd());
     const lineUrl = `${shareTargetUrl}${encodedText}`;
-
-    // LINEを開く
     window.open(lineUrl, '_blank');
 }
