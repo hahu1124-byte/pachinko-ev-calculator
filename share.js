@@ -23,7 +23,8 @@ function getStatsByRate(shareData, rate) {
             const mName = item.machineName || "不明";
             if (!stats.machineCounts[mName]) {
                 stats.machineCounts[mName] = 0;
-                stats.machinesOldestFirst.unshift(mName); // shareDataは最新順なので、unshiftで戻すと古い順になる
+                // historyDataは保存日時が新しい順(降順)なので、古い順(昇順)で表示するためにunshiftを使用
+                stats.machinesOldestFirst.unshift(mName);
             }
             stats.machineCounts[mName]++;
         }
@@ -50,9 +51,10 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
 
     let shareData = [];
     if (selectedIds.length > 0) {
+        // チェックボックスで選択されたデータのみを抽出
         shareData = historyData.filter(item => selectedIds.includes(item.id));
     } else {
-        // 何も選択されていない場合は、最後に保存された履歴のみを対象とする
+        // 何も選択されていない場合は、ユーザーの利便性を考慮し「直近1件」をデフォルト共有対象とする
         shareData = [historyData[0]];
     }
 
@@ -117,6 +119,7 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 }
             });
         }
+        // 共通フッター区切り
         text = text.trimEnd() + '\n--------------------\n';
 
         // --- 個々のデータ（上から新しい順＝shareDataの順） ---

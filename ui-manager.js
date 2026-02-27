@@ -13,7 +13,9 @@ const UIManager = {
         if (!historyList) return;
 
         historyList.innerHTML = '';
+        // 各種統計（期待値合計、回転数合計など）を計算
         const stats = this._calculateStats(historyData, currentSummaryRate, checkedIds);
+        // 表示対象機種のリスト（例：大海5 (2台) / 北斗 (1台)）を生成
         const machineInfoText = this._generateMachineInfo(historyData, currentSummaryRate, checkedIds);
 
         // 2. 履歴アイテムの描画
@@ -38,6 +40,7 @@ const UIManager = {
             sumAcquiredBalls: 0, sumDiffBalls: 0, sumWork: 0, sumBallYen: 0,
             sumTotalInvestYen: 0
         };
+        // チェックボックスによるフィルターが有効かどうか
         const isFilterActive = checkedIds.length > 0;
 
         historyData.forEach(item => {

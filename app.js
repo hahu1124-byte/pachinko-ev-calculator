@@ -1,4 +1,4 @@
-// [v74] 2026-02-27 - 簡略チェックボックスのインライン化、全コードにモード識別コメント追記
+// [v75] 2026-02-27 - 主要ロジックの意図・処理内容に関する日本語コメントの拡充
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = calculatePachinkoEV(inputs, machine);
 
         // UI更新 (数値表示)
+        // 貸玉レートが4円以外の場合、4円換算の回転率も表示する（ユーザーが比較しやすくするため）
         measuredTurnRateDisplay.textContent = res.totalInvestedYen > 0 ? `${res.turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
         if (measuredTurnRate4pDisplay) {
             const container4p = document.getElementById('measured-turn-rate-4p-container');
@@ -93,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cashEvPerSpinDisplay.textContent = formatSpinValue(res.isYutimeApplied ? res.yutimeCashUnitPriceResult : res.normalCashUnitPrice);
 
         // ラベル・バッジ更新
+        // 遊タイム期待値が適用されている場合はタイトルに「（遊）」を付与して明示する
         const labels = {
             unit: res.isYutimeApplied ? '持玉比率単価（遊）' : '持玉比率単価',
             ball: res.isYutimeApplied ? '持玉単価（遊）' : '持玉単価',
@@ -121,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ballRatio: res.ballRatio, positiveBallsYen: Math.max(0, res.usedBalls * playRate), totalInvestedYen: res.totalInvestedYen
         };
 
-        // 演出
+        // 演出処理
+        // 期待値の金額に応じてバッジの色や「オーラ」エフェクトの強弱を動的に変化させる
         UIManager.updateEVBadgeAndAura(Math.round(res.mainEV));
         UIManager.animateEV(Math.round(res.mainEV), evDailyDisplay);
 
@@ -141,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory() {
         const checkedIds = SettingsManager.loadCheckedIds();
         const availableRates = Array.from(new Set(historyData.map(item => item.playRate || 4))).sort((a, b) => b - a);
+        // 現在選択されているレートが履歴にない場合（全削除後など）、存在する最新のレートを表示対象にする
         if (!currentSummaryRate || !availableRates.includes(currentSummaryRate)) {
             currentSummaryRate = availableRates.length > 0 ? availableRates[0] : 4;
         }
