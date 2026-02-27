@@ -1,4 +1,4 @@
-// [v44] 2026-02-27 - 統計日時反映・表示ずれ修正・チェック状態保持
+// [v45] 2026-02-27 - チェック保持強化(sessionStorage)・簡略表示ずれ修正
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -599,8 +599,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory() {
         if (!historyList) return;
         try {
-            // チェック済みIDを保存
-            const checkedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
+            // チェック済みIDを保存（DOMから + sessionStorageから復元）
+            const domChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
+            const storedChecked = JSON.parse(sessionStorage.getItem('checkedHistoryIds') || '[]');
+            const checkedIds = [...new Set([...domChecked, ...storedChecked])];
+            // 保存しておく
+            sessionStorage.setItem('checkedHistoryIds', JSON.stringify(checkedIds));
             historyList.innerHTML = '';
 
             let sumInvestK = 0;
@@ -725,17 +729,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     // 簡略表示モード時は、サマリーデータも縦並びの簡略版フォーマットで表示する
                     summaryBox.style.display = 'block';
-                    summaryBox.innerHTML = `
-                        <div class="history-item-body" style="padding: 0;">
-                            ${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}
-                            <p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p>
-                            <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
-                            <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
-                            <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
-                            <p><span>総期待値:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p>
-                            <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
-                        </div>
-                    `;
+                    summaryBox.style.whiteSpace = 'normal';
+                    summaryBox.innerHTML = `<div class="history-item-body" style="padding: 0;">${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}<p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p><p><span>通常回転数:</span> <span>${sumSpins}回</span></p><p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p><p><span>平均持比単価:</span> <span>${avgBallEv}</span></p><p><span>総期待値:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p><p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p></div>`;
                     if (historyTotalEv) {
                         historyTotalEv.parentElement.style.display = 'flex';
                         historyTotalEv.textContent = formatCurrency(Math.round(sumWork));
@@ -755,6 +750,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (cb) cb.checked = true;
                 });
             }
+            // チェックボックスの変更時にsessionStorageを更新
+            document.querySelectorAll('.history-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const currentChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(c => parseInt(c.getAttribute('data-id')));
+                    sessionStorage.setItem('checkedHistoryIds', JSON.stringify(currentChecked));
+                });
+            });
         } catch (e) {
             console.error('History Rendering Error:', e);
         }
