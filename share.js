@@ -1,7 +1,7 @@
 let shareTargetUrl = 'https://line.me/R/msg/text/?';
 
 // --- 共有ロジック ---
-function handleShareLineClick(historyData, isCompactHistory) {
+function handleShareLineClick(historyData, isCompactHistory, showDate) {
     if (historyData.length === 0) {
         alert('共有する履歴がありません。');
         return;
@@ -21,13 +21,14 @@ function handleShareLineClick(historyData, isCompactHistory) {
     let text = '📊 パチンコ期待値 履歴\n--------------------\n';
 
     if (shareData.length === 1) {
-        // 1件のみの場合は統計データを含めず、個別のデータのみ展開する形式（既存の表示モードによらずシンプルな形式か、既存の簡略形式）
         const item = shareData[0];
         const dailyEV = item.dailyEV || 0;
         let turnText = `${(item.turnRate || 0).toFixed(2)} / 1k - 通常${item.totalSpinsMeasured || 0}回転`;
         if (item.playRate && item.playRate != 4) {
             turnText = `${(item.turnRate || 0).toFixed(2)}(${((item.turnRate || 0) / (4 / item.playRate)).toFixed(2)}/4P1k) / 1k - 通常${item.totalSpinsMeasured || 0}回転`;
         }
+
+        const dateLine = showDate ? `${formatHistoryDate(item.id)}\n` : '';
 
         if (isCompactHistory) {
             const mName = item.machineName || "不明";
@@ -48,17 +49,17 @@ function handleShareLineClick(historyData, isCompactHistory) {
             const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
             const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-            text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n`;
+            text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n`;
         } else {
-            text += `🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
+            text += `${dateLine}🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
             text += `回転率: ${turnText}\n`;
             text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
             text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n`;
         }
     } else {
         if (isCompactHistory) {
-            // =============== 詳細表示時は「個々 → 区切り → 統計」の順 ===============
             shareData.forEach(item => {
+                const dateLine = showDate ? `${formatHistoryDate(item.id)}\n` : '';
                 const mName = item.machineName || "不明";
                 const invK = (item.totalInvestedK || 0).toFixed(3);
                 const spins = item.totalSpinsMeasured || 0;
@@ -79,7 +80,7 @@ function handleShareLineClick(historyData, isCompactHistory) {
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
                 const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-                text += `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
+                text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
             });
             text = text.trimEnd() + '\n';
 
@@ -106,13 +107,11 @@ function handleShareLineClick(historyData, isCompactHistory) {
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
                 const avgBallRatio = sumTotalInvestYen > 0 ? ((sumBallYen / sumTotalInvestYen) * 100).toFixed(1) : "0.0";
 
-                text += `【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
+                const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
+                text += `${dateStat}【${rate}円】総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}\n\n`;
             });
             text = text.trimEnd();
         } else {
-            // =============== 簡略表示時は「統計データ → 区切り → 個々のデータ」の順 ===============
-
-            // 1. 統計データを先に出す(全貸玉レートごとに分別)
             const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
 
             availableRates.forEach(rate => {
@@ -133,7 +132,8 @@ function handleShareLineClick(historyData, isCompactHistory) {
                 const avgTurn = sumInvestK > 0 ? (sumSpins / sumInvestK).toFixed(2) : "0.00";
                 const avgBallEv = sumSpins > 0 ? (sumWork / sumSpins).toFixed(1) : "0";
 
-                text += `【${rate}円 統計】\n`;
+                const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
+                text += `${dateStat}【${rate}円 統計】\n`;
                 text += `💰 合計期待値: ${formatCurrency(Math.round(totalEv))}\n`;
                 text += `📈 平均回転率: ${avgTurn} / 1k\n`;
                 text += `✨ 平均持比単価: ¥${avgBallEv}\n`;
@@ -141,7 +141,6 @@ function handleShareLineClick(historyData, isCompactHistory) {
             });
             text = text.trimEnd() + '\n';
 
-            // 2. 個々のデータを出す
             shareData.forEach(item => {
                 const dailyEV = item.dailyEV || 0;
                 let turnText = `${(item.turnRate || 0).toFixed(2)} / 1k - 通常${item.totalSpinsMeasured || 0}回転`;
@@ -149,7 +148,8 @@ function handleShareLineClick(historyData, isCompactHistory) {
                     turnText = `${(item.turnRate || 0).toFixed(2)}(${((item.turnRate || 0) / (4 / item.playRate)).toFixed(2)}/4P1k) / 1k - 通常${item.totalSpinsMeasured || 0}回転`;
                 }
 
-                text += `🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
+                const dateLine = showDate ? `${formatHistoryDate(item.id)}\n` : '';
+                text += `${dateLine}🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
                 text += `回転率: ${turnText}\n`;
                 text += `持比単価: ${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}\n`;
                 text += `期待値${item.hasYutime ? '(遊込)' : ''}: ${formatCurrency(Math.round(dailyEV))}\n\n`;

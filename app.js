@@ -1,4 +1,4 @@
-// [v41] 2026-02-27 - 日時表示機能追加 & 期待値表示の演出向上（スロット風・称号・オーラ）
+// [v42] 2026-02-27 - 日時表示の全面修正（改行追加・統計反映） & 期待値演出の高度化（7段階オーラ・ドクロ） & 共有同期
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -555,27 +555,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // バッジとオーラ演出の更新
     function updateEVBadgeAndAura(ev) {
-        const evBox = document.getElementById('ev-box');
+        const evBoxInner = document.getElementById('ev-box-inner');
         const badge = document.getElementById('ev-badge');
-        if (!evBox || !badge) return;
+        if (!evBoxInner || !badge) return;
 
-        // 一旦リセット
-        evBox.classList.remove('ev-aura');
+        // 全レベルクラスを一旦削除
+        evBoxInner.classList.remove('ev-level-gold', 'ev-level-blue', 'ev-level-green', 'ev-level-soft-green', 'ev-level-soft-red', 'ev-level-red', 'ev-level-skull');
+        badge.classList.remove('ev-badge-skull');
         badge.classList.add('hidden');
 
         if (ev >= 20000) {
-            evBox.classList.add('ev-aura');
+            evBoxInner.classList.add('ev-level-gold');
             badge.textContent = '⭐大勝利の予感';
             badge.classList.remove('hidden');
         } else if (ev >= 10000) {
-            evBox.classList.add('ev-aura');
+            evBoxInner.classList.add('ev-level-blue');
+            badge.textContent = '💎絶好調';
+            badge.classList.remove('hidden');
+        } else if (ev >= 5000) {
+            evBoxInner.classList.add('ev-level-green');
             badge.textContent = '✨期待大';
             badge.classList.remove('hidden');
         } else if (ev > 0) {
+            evBoxInner.classList.add('ev-level-soft-green');
             badge.textContent = '👍プラス';
             badge.classList.remove('hidden');
-        } else if (ev < 0) {
+        } else if (ev > -1000) {
+            evBoxInner.classList.add('ev-level-soft-red');
+            badge.textContent = '🤏微減';
+            badge.classList.remove('hidden');
+        } else if (ev > -5000) {
+            evBoxInner.classList.add('ev-level-red');
             badge.textContent = '⚠️要注意';
+            badge.classList.remove('hidden');
+        } else {
+            evBoxInner.classList.add('ev-level-skull');
+            badge.classList.add('ev-badge-skull');
+            badge.textContent = '💀警告';
             badge.classList.remove('hidden');
         }
     }
@@ -656,11 +672,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
                 const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
+                const dateText = showDate ? `${formatHistoryDate(item.id)}\n` : '';
+
                 if (isCompactHistory) {
-                    const dateStr = showDate ? `${formatHistoryDate(item.id)}\n` : '';
-                    const text = `${dateStr}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
+                    const text = `${dateText}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
                     div.innerHTML = `
-                         <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4;">
+                         <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">
                             ${text}
                         </div>
                         <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">
@@ -674,7 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     div.innerHTML = `
                         <div class="history-item-header">
-                            <h4>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></h4>
+                            <h4 style="display: flex; flex-direction: column;">
+                                ${showDate ? `<span style="font-size:0.7rem; color:#94A3B8; margin-bottom: 2px;">${formatHistoryDate(item.id)}</span>` : ''}
+                                <span>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></span>
+                            </h4>
                             <input type="checkbox" class="history-checkbox" data-id="${item.id}">
                         </div>
                         <div class="history-item-body">
@@ -708,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     summaryBox.style.display = 'block';
                     summaryBox.innerHTML = `
                         <div class="history-item-body" style="padding: 0;">
-                            ${showDate ? `<p><span>算出日時:</span> <span>${formatHistoryDate(Date.now())}</span></p>` : ''}
+                            ${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}
                             <p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p>
                             <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
                             <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
@@ -782,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shareLineBtn) {
         shareLineBtn.addEventListener('click', () => {
             if (typeof handleShareLineClick === 'function') {
-                handleShareLineClick(historyData, isCompactHistory);
+                handleShareLineClick(historyData, isCompactHistory, showDate);
             } else {
                 console.error("share.js is not loaded properly.");
             }
@@ -892,7 +912,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
                     }
                 }
-
             } catch (e) {
                 console.error("Failed to load settings from localStorage", e);
             }
@@ -907,16 +926,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleDateBtn.classList.toggle('btn-on', showDate);
             renderHistory();
         });
-    }
-
-    function formatHistoryDate(timestamp) {
-        const d = new Date(timestamp);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const h = d.getHours();
-        const mm = String(d.getMinutes()).padStart(2, '0');
-        return `${y}/${m}/${dd} - ${h}:${mm}`;
     }
 
     // CSVロード前に一旦設定を復元する
