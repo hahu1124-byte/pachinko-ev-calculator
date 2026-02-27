@@ -98,7 +98,6 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
         const availableRates = Array.from(new Set(shareData.map(item => item.playRate || 4))).sort((a, b) => b - a);
 
         if (isCompactHistory) {
-            text += `統計データ\n`;
             availableRates.forEach(rate => {
                 const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
@@ -106,7 +105,6 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 text += `${dateStat}${s.machineInfoText}\n【${rate}円】総投資/${s.sumInvestK.toFixed(3)}k/通常回転数/${s.sumSpins}/回転率${s.avgTurn}/使用現金${s.sumCashK.toFixed(2)}k/RB${s.avgRb}/総R回数${s.sumBonusRounds}/総獲得玉${Math.round(s.sumAcquiredBalls)}/総差玉${s.sumDiffBalls.toLocaleString()}/単(持)${s.avgBallEv}/期待値${sumWorkFormatted}/持比${s.avgBallRatio}%/🎯or台毎数${s.count}\n`;
             });
         } else {
-            text += `統計データ\n`;
             availableRates.forEach((rate, index) => {
                 const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
@@ -119,7 +117,7 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 }
             });
         }
-        text = text.trimEnd() + '\n--------------------\n個々データ\n';
+        text = text.trimEnd() + '\n--------------------\n';
 
         // --- 個々のデータ（上から新しい順＝shareDataの順） ---
         shareData.forEach(item => {

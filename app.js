@@ -1,4 +1,4 @@
-// [v63] 2026-02-27 - LINE共有内容のフォーマット調整（区切り線変更、空行詰め）
+// [v64] 2026-02-27 - LINE共有フォーマットの再調整（見出しラベル削除）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
