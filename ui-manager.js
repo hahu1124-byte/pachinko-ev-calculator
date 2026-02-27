@@ -83,7 +83,7 @@ const UIManager = {
                     const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
                     const text = `${dateText}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
-                    div.innerHTML = `<div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">${text}</div><input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">`;
+                    div.innerHTML = `<div style="font-size: 0.8rem; word-break: break-all; padding: 0 0.75rem; padding-right: 32px; line-height: 1.4; white-space: pre-wrap;">${text}</div><input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">`;
                 } else {
                     div.style.padding = '0';
                     div.style.borderBottom = 'none';

@@ -1,3 +1,5 @@
+let shareTargetUrl = 'https://line.me/R/msg/text/?';
+
 // 統計情報を取得する共通関数
 function getStatsByRate(shareData, rate) {
     let stats = {
