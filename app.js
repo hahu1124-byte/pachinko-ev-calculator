@@ -391,9 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
-            // === I19相当: 現金単価 (期待度G23の1乗、係数/2、交換率係数を反映) ===
-            // ユーザー指定式: ((((1R出玉 / 遊トータル確率 * 換金単価) - (1000 / 実測回転率)) * (250 / ballsPer1k)) / 2) * G23 / 交換率
-            const rawI19 = (((((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)) / 2) * yutimeExpectancy) / exchangeFactorVal;
+            // === I19相当: 現金単価 (期待度G23の2乗、係数/2、交換率係数を反映) ===
+            // ユーザー指定式: ((((1R出玉 / 遊トータル確率 * 換金単価) - (1000 / 実測回転率)) * (250 / ballsPer1k)) / 2) * G23^2 / 交換率
+            const rawI19 = (((((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)) / 2) * Math.pow(yutimeExpectancy, 2)) / exchangeFactorVal;
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
@@ -447,15 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
         cashEvPerSpinDisplay.textContent = formatSpinValue(isYutimeApplied ? yutimeCashUnitPriceResult : normalCashUnitPrice);
 
         // 遊タイム情報の表示
-        if (hasYutime) {
+        if (isYutimeApplied) {
             yutimeEvRow.style.display = 'flex';
             yutimeEvOnlyDisplay.textContent = formatCurrency(Math.round(yutimeEV));
-            yutimeValueRow.style.display = 'flex';
-            yutimeValuePerSpinDisplay.textContent = formatSpinValue(yutimeValuePerSpin);
         } else {
             yutimeEvRow.style.display = 'none';
-            yutimeValueRow.style.display = 'none';
         }
+        // 遊タイム持比単価行はメイン項目に統合されたため常に非表示
+        if (yutimeValueRow) yutimeValueRow.style.display = 'none';
 
         // 保存用のデータを一時保持
         const selectedMachine = machineData[selectedIdx];
