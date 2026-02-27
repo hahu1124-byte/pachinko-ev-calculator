@@ -479,8 +479,8 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    position: relative;
-    /* 追加: 絶対配置の基準 */
+    position: relative !important;
+    /* 配置基準を確実に固定 */
 }
 
 .history-item-header {
@@ -523,19 +523,18 @@ footer {
     flex-direction: column;
 }
 
-.header-right {
-    display: none;
-    /* 個別配置に切り替えるため無効化 */
-}
+/* .header-right は廃止（チェックボックスを独立配置にしたため） */
 
 .history-checkbox {
-    position: absolute;
-    right: 1.25rem;
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
+    position: absolute !important;
+    right: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
     cursor: pointer;
-    z-index: 5;
+    z-index: 100 !important;
+    width: 18px !important;
+    height: 18px !important;
 }
 
 .history-item-body p {

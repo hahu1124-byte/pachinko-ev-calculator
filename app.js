@@ -1,4 +1,4 @@
-// [v69] 2026-02-27 - 簡略履歴のチェックボックス表示修正 (header-right 依存の解消)
+// [v70] 2026-02-27 - 履歴チェックボックスの全モード共通化と構造的修正 (header-right 廃止)
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;

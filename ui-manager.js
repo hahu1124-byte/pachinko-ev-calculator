@@ -126,15 +126,13 @@ const UIManager = {
                         ${showDate ? `<div class="history-date-label">${dateMeta}</div>` : ''}
                         <h4 class="history-machine-title">${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
                     </div>
-                    <div class="header-right">
-                        <input type="checkbox" class="history-checkbox" data-id="${item.id}">
-                    </div>
                 </div>
                 <div class="history-item-body">
                     <p><span>回転率:</span> <span>${turnDisplayText} (${spins}回転)</span></p>
                     <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
                     <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1.1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
                 </div>
+                <input type="checkbox" class="history-checkbox" data-id="${item.id}">
             `;
         }
         return div;
