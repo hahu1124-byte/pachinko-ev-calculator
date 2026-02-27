@@ -12,6 +12,7 @@ description: pachinko-ev-calculatorの更新・修正作業を円滑に行うた
 修正を開始する前に、必ず最新の状態を確認してください。
 
 - **概要ドキュメントの参照**: [overview.md](file:///h:/gravity/pachinko-ev-calculator/docs/pachinko_ev_calculator_status/overview.md)
+- **ワークフローの確認**: `.agent/workflows` 内の関連するワークフロー（例: `github-push.md`）を確認し、手順に従ってください。
 - **ソースコード**: `app.js` (ロジック), `share.js` (LINE共有), `index.html` (UI)
 
 ## 2. 更新手順
