@@ -1,4 +1,4 @@
-// [v47] 2026-02-27 - showDate永続化・チェック保持の根本修正（全選択対応）
+// [v48] 2026-02-27 - 統計情報への機種内訳追加（古い順）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -648,6 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            const machineCounts = {};
+            const machinesOldestFirst = [];
+
             historyData.forEach((item, index) => {
                 // そのレートが現在の表示レート一致の時だけ統計データに加算
                 if ((item.playRate || 4) == currentSummaryRate) {
@@ -661,8 +664,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     sumBallYen += (item.positiveBallsYen || 0);
                     sumTotalInvestYen += (item.totalInvestedYen || 0);
                 }
+            });
 
-                const div = document.createElement('div');
+            // 機種内訳の集計（古い順）: historyDataは[newest...oldest]なので後ろから回る
+            for (let i = historyData.length - 1; i >= 0; i--) {
+                const item = historyData[i];
+                if ((item.playRate || 4) == currentSummaryRate) {
+                    const name = item.machineName || "不明";
+                    if (!machineCounts[name]) {
+                        machineCounts[name] = 0;
+                        machinesOldestFirst.push(name);
+                    }
+                    machineCounts[name]++;
+                }
+            }
+            const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]})`).join(' / ');
+
+            historyData.forEach((item, index) => {
                 div.className = 'history-item';
                 div.style.padding = '0.75rem';
                 div.style.position = 'relative';
@@ -731,17 +749,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (isCompactHistory) {
                     // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
-                    const statDateText = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
+                    const statDateText = showDate ? `${formatHistoryDate(Date.now())} ` : '';
                     summaryBox.style.display = 'block';
                     summaryBox.style.whiteSpace = 'pre-wrap';
-                    summaryBox.textContent = `${statDateText}総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
+                    summaryBox.textContent = `${statDateText}${machineInfoText}\n総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
                     if (historyTotalEv) historyTotalEv.parentElement.style.display = 'none';
                     if (historyAvgBallEv) historyAvgBallEv.parentElement.style.display = 'none';
                 } else {
                     // 簡略表示モード時は、サマリーデータも縦並びの簡略版フォーマットで表示する
                     summaryBox.style.display = 'block';
                     summaryBox.style.whiteSpace = 'normal';
-                    summaryBox.innerHTML = `<div class="history-item-body" style="padding: 0;">${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}<p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p><p><span>通常回転数:</span> <span>${sumSpins}回</span></p><p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p><p><span>平均持比単価:</span> <span>${avgBallEv}</span></p><p><span>総期待値:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p><p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p></div>`;
+                    summaryBox.innerHTML = `
+                        <div class="history-item-body" style="padding: 0;">
+                            ${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}
+                            <p style="margin-bottom: 0.5rem;"><span>機種内訳:</span> <span style="display: block; text-align: right; margin-top: 2px;">${machineInfoText || 'なし'}</span></p>
+                            <p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p>
+                            <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
+                            <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
+                            <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
+                            <p><span>総期待値:</span> <span>￥${Math.round(sumWork).toLocaleString()}</span></p>
+                            <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
+                        </div>
+                    `;
                     if (historyTotalEv) {
                         historyTotalEv.parentElement.style.display = 'flex';
                         historyTotalEv.textContent = formatCurrency(Math.round(sumWork));
