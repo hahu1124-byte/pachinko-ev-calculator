@@ -80,4 +80,4 @@ description: pachinko-ev-calculatorの更新・修正作業を円滑に行うた
 
 - **修正 ＝ リリースまで完遂すること。**
 - コードを直して満足せず、必ず `github-push.md` を実行し、タグを打つ。
-- 詳細は [FAILURES_LOG.md](file:///h:/gravity/pachinko-ev-calculator/docs/FAILURES_LOG.md) を参照し、二度と繰り返さない。
+- **実装計画の自動承認**: 作成した実装計画は、ユーザーからの個別承認を待たずに即時実行フェーズへ移行します（2026-02-27導入ルール）。

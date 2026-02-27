@@ -1,4 +1,4 @@
-// [v58] 2026-02-27 - 統計セクションの演出強化（カウントアップ・オーラ）
+// [v59] 2026-02-27 - 期待値表記修正(￥±) & 統計演出細分化(4段階オーラ)
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;

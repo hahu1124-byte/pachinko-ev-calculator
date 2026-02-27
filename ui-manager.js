@@ -124,19 +124,23 @@ const UIManager = {
                 summaryBox.style.display = 'block';
                 summaryBox.style.whiteSpace = 'pre-wrap';
 
-                // サマリーオーラの適用
-                summaryBox.classList.remove('summary-aura-green', 'summary-aura-gold');
+                // サマリーオーラの適用 (v59)
+                summaryBox.classList.remove('summary-aura-green', 'summary-aura-blue', 'summary-aura-bluegold', 'summary-aura-gold');
                 if (stats.sumWork >= 30000) summaryBox.classList.add('summary-aura-gold');
+                else if (stats.sumWork >= 2000) summaryBox.classList.add('summary-aura-bluegold');
+                else if (stats.sumWork >= 1000) summaryBox.classList.add('summary-aura-blue');
                 else if (stats.sumWork > 0) summaryBox.classList.add('summary-aura-green');
 
-                summaryBox.innerHTML = `${statDateText}${machineInfoText}\n総投資/${stats.sumInvestK.toFixed(3)}k/通常回転数/${stats.sumSpins}/回転率${avgTurn}/使用現金${stats.sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${stats.sumBonusRounds}/総獲得玉${Math.round(stats.sumAcquiredBalls)}/総差玉${stats.sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥<span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span>/持比${avgBallRatio}%/🎯or台毎数${count}`;
+                summaryBox.innerHTML = `${statDateText}${machineInfoText}\n総投資/${stats.sumInvestK.toFixed(3)}k/通常回転数/${stats.sumSpins}/回転率${avgTurn}/使用現金${stats.sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${stats.sumBonusRounds}/総獲得玉${Math.round(stats.sumAcquiredBalls)}/総差玉${stats.sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値<span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span>/持比${avgBallRatio}%/🎯or台毎数${count}`;
             } else {
                 summaryBox.style.display = 'block';
                 summaryBox.style.whiteSpace = 'normal';
 
-                // サマリーオーラの適用
-                summaryBox.classList.remove('summary-aura-green', 'summary-aura-gold');
+                // サマリーオーラの適用 (v59)
+                summaryBox.classList.remove('summary-aura-green', 'summary-aura-blue', 'summary-aura-bluegold', 'summary-aura-gold');
                 if (stats.sumWork >= 30000) summaryBox.classList.add('summary-aura-gold');
+                else if (stats.sumWork >= 2000) summaryBox.classList.add('summary-aura-bluegold');
+                else if (stats.sumWork >= 1000) summaryBox.classList.add('summary-aura-blue');
                 else if (stats.sumWork > 0) summaryBox.classList.add('summary-aura-green');
 
                 summaryBox.innerHTML = `
@@ -147,7 +151,7 @@ const UIManager = {
                         <p><span>通常回転数:</span> <span>${stats.sumSpins}回</span></p>
                         <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
                         <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
-                        <p><span>総期待値:</span> <span class="${stats.sumWork >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">￥<span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span></span></p>
+                        <p><span>総期待値:</span> <span class="${stats.sumWork >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;"><span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span></span></p>
                         <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
                     </div>
                 `;
@@ -155,9 +159,30 @@ const UIManager = {
             // カウントアップ演出の実行
             const summaryEvElem = document.getElementById('history-summary-ev-total');
             if (summaryEvElem) {
-                this.animateEV(Math.round(stats.sumWork), summaryEvElem);
-                // プラスの場合は色強調
+                // v59: 符号付き通貨フォーマットを自前で制御
+                const targetValue = Math.round(stats.sumWork);
+                const startValue = 0;
+                const duration = 800;
+                const startTime = performance.now();
+                const self = this;
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOutQuad = t => t * (2 - t);
+                    const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutQuad(progress));
+
+                    summaryEvElem.textContent = formatCurrency(currentValue);
+
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+
+                // プラスの場合は色強調 (v59: 4段階)
+                summaryEvElem.classList.remove('text-highlight-green', 'text-highlight-blue', 'text-highlight-bluegold', 'text-highlight-gold');
                 if (stats.sumWork >= 30000) summaryEvElem.classList.add('text-highlight-gold');
+                else if (stats.sumWork >= 2000) summaryEvElem.classList.add('text-highlight-bluegold');
+                else if (stats.sumWork >= 1000) summaryEvElem.classList.add('text-highlight-blue');
                 else if (stats.sumWork > 0) summaryEvElem.classList.add('text-highlight-green');
             }
         }
