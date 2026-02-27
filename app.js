@@ -1,4 +1,4 @@
-// [v51] 2026-02-27 - 履歴表示フィルタの復元・メンテナンスルール強化
+// [v52] 2026-02-27 - 履歴消失バグの修正（変数定義漏れ解消）とループ集約による最適化
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -649,23 +649,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const isFilterActive = checkedIds.length > 0;
+            const machineCounts = {};
+            const machinesOldestFirst = [];
 
-            historyData.forEach((item, index) => {
-                // そのレートが現在の表示レート一致、かつ「フィルタ非アクティブ」または「チェック入り」の時のみ統計加算
-                if ((item.playRate || 4) == currentSummaryRate && (!isFilterActive || checkedIds.includes(item.id))) {
-                    sumInvestK += (item.totalInvestedK || 0);
-                    sumSpins += (item.totalSpinsMeasured || 0);
-                    sumCashK += (item.cashInvestedK || 0);
-                    sumBonusRounds += (item.bonusRounds || 0);
-                    sumAcquiredBalls += (item.acquiredBalls || 0);
-                    sumDiffBalls += (item.diffBalls || 0);
-                    sumWork += (item.dailyEV || 0);
-                    sumBallYen += (item.positiveBallsYen || 0);
-                    sumTotalInvestYen += (item.totalInvestedYen || 0);
-                }
-            });
+            // 統計・集計・描画を一つのループで処理（効率化とバグ防止）
+            // 古い順の機種情報を先に作る必要があるため、逆順ループを1回、描画ループを1回行う
 
-            // 機種内訳の集計（古い順）: フィルタを考慮
+            // 1. 機種内訳の集計（古い順）
             for (let i = historyData.length - 1; i >= 0; i--) {
                 const item = historyData[i];
                 if ((item.playRate || 4) == currentSummaryRate && (!isFilterActive || checkedIds.includes(item.id))) {
@@ -679,9 +669,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
 
+            // 2. 統計加算と個別の描画
             historyData.forEach((item, index) => {
-                // 表示対象のレートのみレンダリング
-                if ((item.playRate || 4) == currentSummaryRate) {
+                const isTargetRate = (item.playRate || 4) == currentSummaryRate;
+                const isSelected = checkedIds.includes(item.id);
+
+                // 統計への加算（表示レート一致 かつ (フィルタなし OR 選択中)）
+                if (isTargetRate && (!isFilterActive || isSelected)) {
+                    sumInvestK += (item.totalInvestedK || 0);
+                    sumSpins += (item.totalSpinsMeasured || 0);
+                    sumCashK += (item.cashInvestedK || 0);
+                    sumBonusRounds += (item.bonusRounds || 0);
+                    sumAcquiredBalls += (item.acquiredBalls || 0);
+                    sumDiffBalls += (item.diffBalls || 0);
+                    sumWork += (item.dailyEV || 0);
+                    sumBallYen += (item.positiveBallsYen || 0);
+                    sumTotalInvestYen += (item.totalInvestedYen || 0);
+                }
+
+                // 表示対象のみ描画
+                if (isTargetRate) {
                     const div = document.createElement('div');
                     div.className = 'history-item';
                     div.style.padding = '0.75rem';
@@ -693,7 +700,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const spins = item.totalSpinsMeasured || 0;
                     let turn = (item.turnRate || 0).toFixed(2);
 
-                    // 4円以外なら4P換算の回転率を併記する処理
                     if (item.playRate && item.playRate != 4) {
                         const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
                         turn = `${turn}(${turn4p})`;
@@ -736,7 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         `;
                     }
-
                     historyList.appendChild(div);
                 }
             });
