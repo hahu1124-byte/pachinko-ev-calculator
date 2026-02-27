@@ -307,6 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
             activeBorderBase = 250 / (measuredRb / prob);
         }
 
+        // --- 現金ボーダー（実質ボーダー）の計算 ---
+        // 換金差（ギャップ）を考慮したボーダーライン
+        const realBorder = activeBorderBase * (playRate / valuePerBallCashout);
+
         if (activeBorderBase <= 0 || isNaN(activeBorderBase) || turnRatePer1k <= 0 || totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '¥0';
             totalSpinsDisplay.textContent = '0 回転';
