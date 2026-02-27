@@ -1,4 +1,4 @@
-// [v48] 2026-02-27 - 統計情報への機種内訳追加（古い順）
+// [v49] 2026-02-27 - 履歴消失バグの修正（createElementの復元）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -681,6 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]})`).join(' / ');
 
             historyData.forEach((item, index) => {
+                const div = document.createElement('div');
                 div.className = 'history-item';
                 div.style.padding = '0.75rem';
                 div.style.position = 'relative';
