@@ -1,4 +1,4 @@
-// [v42] 2026-02-27 - 日時表示の全面修正（改行追加・統計反映） & 期待値演出の高度化（7段階オーラ・ドクロ） & 共有同期
+// [v43] 2026-02-27 - 不具合修正：日時表示バグ修正 & デフォルトON化 & 共有同期再点検
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyData = JSON.parse(localStorage.getItem('pachinkoHistory')) || [];
     let latestCalculation = null;
     let isCompactHistory = false; // true = 詳細(v38以降の区切り), false = 簡略(v37相当・デフォルト)
-    let showDate = false; // 日時表示フラグ
+    let showDate = true; // 日時表示フラグ (v43からデフォルトON)
     let currentSummaryRate = null; // 統計表示で現在選択されている貸玉レート
 
     // UI切り替えロジック
