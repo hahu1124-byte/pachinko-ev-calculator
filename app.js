@@ -341,8 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
             : (j14Result * conversionFactor);
 
         // === J15: 通常時の現金単価 ===
-        // J15 = ((rb / トータル確率 * valuePerBallCashout) - (1000 / 回転率)) * (250 / (ballsPer1k / 4))
-        const normalCashUnitPrice = ((rb * valuePerBallCashout / prob) - (1000 / turnRatePer1k)) * (250 / (ballsPer1k / 4));
+        // J15 = ((rb / トータル確率 * valuePerBallCashout) - (1000 / 回転率)) * (250 / ballsPer1k)
+        const normalCashUnitPrice = ((rb * valuePerBallCashout / prob) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
 
         // === J16: 通常時の持玉比率単価 ===
         // J16 = (MIN(J14, K14) * ballRatio) + J15 * (1 - ballRatio)
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // === I19相当: 現金単価 ===
             // 消費金額も4円ベース(1000円)からレート基準の可変金額へ
             const cashInvestPer1k = (ballsPer1k / 250) * 1000;
-            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (cashInvestPer1k / turnRatePer1k)) * (250 / (ballsPer1k / 4));
+            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (cashInvestPer1k / turnRatePer1k)) * (250 / ballsPer1k);
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
