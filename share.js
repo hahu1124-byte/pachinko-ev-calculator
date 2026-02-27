@@ -157,5 +157,14 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
     const encodedText = encodeURIComponent(text.trimEnd());
     // PC・スマホ両対応: https://line.me を使用（PCではウェブ版、スマホではアプリ起動）
     const lineUrl = `https://line.me/R/msg/text/?${encodedText}`;
-    window.location.href = lineUrl;
+
+    // スマホブラウザの場合はポップアップブロックを回避するため location.href を使用
+    // PCブラウザの場合は元のページを残すため window.open を使用
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        window.location.href = lineUrl;
+    } else {
+        window.open(lineUrl, '_blank');
+    }
 }
