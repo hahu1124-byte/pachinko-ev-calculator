@@ -1,0 +1,37 @@
+# pachinko-ev-calculator プロジェクト概要
+
+## プロジェクトの目的
+
+パチンコの期待値（期待収支）を実戦データに基づいて計算し、履歴として保存・管理するためのツール。
+
+## 主要機能
+
+1. **期待値計算**
+    - 等価ボーダー・現金ボーダーの算出。
+    - 実測回転率、実測1R出玉によるリアルタイム計算。
+    - **遊タイム対応**: 遊タイム非考慮(通常)と遊タイム込の期待値を比較し、高い方を自動採用。
+2. **履歴管理 (LocalStorage)**
+    - 計算結果を「履歴」として保存。
+    - 貸玉レート（4円、1円等）ごとの自動統計表示。
+    - 詳細表示（1行）と簡略表示（カード形式）の切り替え。
+3. **情報共有**
+    - **LINE共有**: 選択した履歴（または最新の履歴）をLINEに送信。
+    - 統計データと個別データの両方を含めて送信可能。
+4. **機種データ連動**
+    - Googleスプレッドシート(CSV)から最新の機種情報を自動取得。
+
+## 技術スタック
+
+- **Frontend**: Vanilla HTML / CSS / JavaScript
+- **Data Source**: Google Sheets (CSV) via fetch API
+- **Storage**: Browser LocalStorage
+- **Workflow**: `.agent/workflows/github-push.md` による自動デプロイ（GitHub Pages）
+
+## ファイル構成
+
+- `index.html`: UI構造。
+- `styles.css`: モダンスタイル（ダークモード基調、レスポンシブ）。
+- `app.js`: 計算エンジン、UI制御、履歴管理。
+- `share.js`: LINE共有用メッセージ生成ロジック。
+- `utils.js`: 通貨フォーマットなどの共通関数。
+- `.agent/workflows/github-push.md`: 更新・デプロイ手順。
