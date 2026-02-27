@@ -1,4 +1,4 @@
-// [v45] 2026-02-27 - チェック保持強化(sessionStorage)・簡略表示ずれ修正
+// [v46] 2026-02-27 - チェック保持バグ修正（DOM優先マージ）・履歴クリーンアップ追加
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -599,11 +599,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory() {
         if (!historyList) return;
         try {
-            // チェック済みIDを保存（DOMから + sessionStorageから復元）
-            const domChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
-            const storedChecked = JSON.parse(sessionStorage.getItem('checkedHistoryIds') || '[]');
-            const checkedIds = [...new Set([...domChecked, ...storedChecked])];
-            // 保存しておく
+            // チェック済みIDの更新ロジック
+            const allBoxes = document.querySelectorAll('.history-checkbox');
+            let checkedIds;
+            if (allBoxes.length > 0) {
+                // DOMが存在する場合（表示切替や再描画時）: 現在の画面の状態を最新の真実とする
+                checkedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
+            } else {
+                // DOMが存在しない場合（ページ初期ロード時）: sessionStorage から読み込む
+                checkedIds = JSON.parse(sessionStorage.getItem('checkedHistoryIds') || '[]');
+            }
+
+            // 履歴データに既に存在しないIDをクリーンアップ
+            const validIds = new Set(historyData.map(item => item.id));
+            checkedIds = checkedIds.filter(id => validIds.has(id));
+
+            // 最新の状態を保存
             sessionStorage.setItem('checkedHistoryIds', JSON.stringify(checkedIds));
             historyList.innerHTML = '';
 
