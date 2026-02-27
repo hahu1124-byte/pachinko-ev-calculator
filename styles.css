@@ -484,9 +484,11 @@ footer {
 .history-item-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    /* centerに変更 */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.25rem 0;
+    padding: 0.35rem 0;
+    /* 少し余裕を持たせる */
     margin-bottom: 0.35rem;
 }
 
@@ -519,6 +521,12 @@ footer {
 .header-right {
     display: flex;
     align-items: center;
+    padding-left: 0.5rem;
+}
+
+.history-checkbox {
+    margin: 0;
+    cursor: pointer;
 }
 
 .history-item-body p {

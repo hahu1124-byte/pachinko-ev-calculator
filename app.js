@@ -1,4 +1,4 @@
-// [v66] 2026-02-27 - 履歴表示の改行修正、表記統合、チェックボックス位置調整
+// [v67] 2026-02-27 - 詳細履歴のチェックボックス配置修正（垂直中央）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
