@@ -496,7 +496,108 @@ footer {
     margin: 0.15rem 0;
 }
 
+
 .history-item-body p.history-ev {
     font-weight: bold;
     color: var(--accent);
+}
+
+/* 統計セクション用のオーラ演出 (v60) */
+.summary-aura-green {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+    background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(16, 185, 129, 0.1));
+    animation: summary-pulse-green 3s infinite ease-in-out;
+}
+
+.summary-aura-blue {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.5) !important;
+    background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(59, 130, 246, 0.1));
+    animation: summary-pulse-blue 3s infinite ease-in-out;
+}
+
+.summary-aura-bluegold {
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(251, 191, 36, 0.15);
+    border: 1.5px solid rgba(251, 191, 36, 0.4) !important;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(251, 191, 36, 0.15));
+    animation: summary-pulse-bluegold 3s infinite ease-in-out;
+}
+
+.summary-aura-gold {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 15px rgba(255, 215, 0, 0.2);
+    border: 1.5px solid rgba(255, 215, 0, 0.6) !important;
+    background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(251, 191, 36, 0.2));
+    animation: summary-pulse-gold 3s infinite ease-in-out;
+}
+
+@keyframes summary-pulse-green {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    }
+}
+
+@keyframes summary-pulse-blue {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+    }
+}
+
+@keyframes summary-pulse-bluegold {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 35px rgba(251, 191, 36, 0.5);
+    }
+}
+
+@keyframes summary-pulse-gold {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.7);
+    }
+}
+
+/* カウントアップ演出用の色 (v60) */
+.text-highlight-green {
+    color: #34D399;
+    transition: color 0.5s ease;
+}
+
+.text-highlight-blue {
+    color: #60A5FA;
+    transition: color 0.5s ease;
+}
+
+.text-highlight-bluegold {
+    color: #22D3EE;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+    transition: color 0.5s ease;
+}
+
+.text-highlight-gold {
+    color: #FBBF24;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    transition: color 0.5s ease;
 }
