@@ -497,8 +497,8 @@ footer {
 }
 
 .history-item-header h4 {
-    color: var(--text-main);
-    /* 紫から白に戻す */
+    color: var(--primary);
+    /* 展開表示(ユーザーの「簡略」)の機種名は紫 */
     margin: 0;
     font-size: 0.95rem;
     display: flex;
@@ -673,7 +673,8 @@ footer {
 }
 
 .compact-machine {
-    color: var(--primary);
+    color: var(--text-main);
+    /* compact表示(ユーザーの「詳細」)の機種名は白 */
     font-weight: bold;
     flex: 1;
     min-width: 0;

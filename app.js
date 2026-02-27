@@ -1,4 +1,4 @@
-// [v72] 2026-02-27 - 簡略機種名の文字色を元の紫 (--primary) に復帰
+// [v73] 2026-02-27 - 簡略/詳細のモード認識修正（文字色の逆転解消）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
