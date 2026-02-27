@@ -80,6 +80,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    // 機種プリセットのロード（キャッシュ優先 → バックグラウンドで最新取得）
+    const STORAGE_KEY_MACHINES = 'pachinkoMachineData';
+    const savedMachines = localStorage.getItem(STORAGE_KEY_MACHINES);
+    if (savedMachines) {
+        try {
+            machineData = JSON.parse(savedMachines);
+            console.log('[DEBUG] Loaded machines from cache:', machineData.length);
+            populateMachineSelect();
+        } catch (e) {
+            console.warn('Failed to parse cached machine data:', e);
+        }
+    }
+
     console.log('[DEBUG] Starting CSV fetch from:', sheetCsvUrl);
     fetch(sheetCsvUrl)
         .then(response => {
@@ -101,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const avgChains = rows.length > 10 ? rows[10] : null;
             const yutimeSpinCounts = rows.length > 15 ? rows[15] : null;
 
-            machineData = [];
+            const newMachineData = [];
             for (let i = 1; i < names.length; i++) {
                 const name = names[i] ? names[i].trim() : '';
                 if (!name) continue;
@@ -114,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const yutimeSpinCount = (yutimeSpinCounts && yutimeSpinCounts[i]) ? parseFloat(yutimeSpinCounts[i]) || 0 : 0;
                 if (rb > 0 && prob > 0) {
                     const border = 250 / (rb / prob);
-                    machineData.push({
+                    newMachineData.push({
                         name,
                         border,
                         prob,
@@ -127,21 +140,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             }
-            populateMachineSelect();
+
+            // データが正常に取得できている場合のみ更新・キャッシュ
+            if (newMachineData.length > 0) {
+                machineData = newMachineData;
+                localStorage.setItem(STORAGE_KEY_MACHINES, JSON.stringify(machineData));
+                console.log('[DEBUG] Machine data updated and cached.');
+                populateMachineSelect();
+            }
         })
         .catch(error => {
             console.error('Error loading machines CSV:', error);
-            machineData = [
-                { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23, avgChain: 3.011, yutimeSpinCount: 350 },
-                { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 },
-                { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 }
-            ];
-            const option = document.createElement('option');
-            option.value = "";
-            option.textContent = "-- 通信エラー: サンプル機種データを読み込みました --";
-            option.disabled = true;
-            machineSelect.appendChild(option);
-            populateMachineSelect();
+            if (machineData.length === 0) {
+                machineData = [
+                    { name: "【サンプル】P大海物語5", border: 16.5, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 950, yutimeRb: 10.23, avgChain: 3.011, yutimeSpinCount: 350 },
+                    { name: "【サンプル】Pエヴァ15", border: 16.7, prob: 31.9, primaryProb: 319.6, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 },
+                    { name: "【サンプル】eRe:ゼロ2", border: 16.3, prob: 34.9, primaryProb: 349.9, rb: 140, yutimeSpins: 0, yutimeRb: 0, avgChain: 0, yutimeSpinCount: 0 }
+                ];
+                populateMachineSelect();
+            }
         });
 
     function populateMachineSelect() {
@@ -158,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const investmentPrice = playRate;
         const cashoutPrice = (1000 / exchangeRateBalls) * (playRate / 4);
 
+        const fragment = document.createDocumentFragment();
         machineData.forEach((machine, index) => {
             // 現金ボーダー（持ち玉比率0%のときの実質ボーダー）
             const gapFactor = investmentPrice / cashoutPrice;
@@ -167,8 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const option = document.createElement('option');
             option.value = index;
             option.textContent = `${machine.name} (${machine.border.toFixed(1)} / ${cashBorder.toFixed(1)})${yutimeText}`;
-            machineSelect.appendChild(option);
+            fragment.appendChild(option);
         });
+        machineSelect.appendChild(fragment);
 
         // 過去の選択状態を復元、なければ先頭の機種を自動選択し、未選択による計算エラー（反映されない問題）を防止する
         const savedMachineValue = machineSelect.getAttribute('data-saved-value');
