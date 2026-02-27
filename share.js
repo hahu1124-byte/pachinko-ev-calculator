@@ -106,17 +106,19 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 text += `${dateStat}${s.machineInfoText}\n【${rate}円】総投資/${s.sumInvestK.toFixed(3)}k/通常回転数/${s.sumSpins}/回転率${s.avgTurn}/使用現金${s.sumCashK.toFixed(2)}k/RB${s.avgRb}/総R回数${s.sumBonusRounds}/総獲得玉${Math.round(s.sumAcquiredBalls)}/総差玉${s.sumDiffBalls.toLocaleString()}/単(持)${s.avgBallEv}/期待値￥${Math.round(s.sumWork).toLocaleString()}/持比${s.avgBallRatio}%/🎯or台毎数${s.count}\n\n`;
             });
         } else {
-            availableRates.forEach(rate => {
+            availableRates.forEach((rate, index) => {
                 const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
                 text += `${dateStat}${s.machineInfoText}\n【${rate}円 統計】\n`;
                 text += `💰 合計期待値: ${formatCurrency(Math.round(s.sumWork))}\n`;
                 text += `📈 平均回転率: ${s.avgTurn} / 1k\n`;
                 text += `✨ 平均持比単価: ¥${s.avgBallEv}\n`;
-                text += `--------------------\n\n`;
+                if (index < availableRates.length - 1) {
+                    text += `--------------------\n`;
+                }
             });
         }
-        text = text.trimEnd() + '\n';
+        text = text.trimEnd() + '\n====================\n';
 
         // --- 個々のデータ（上から新しい順＝shareDataの順） ---
         shareData.forEach(item => {

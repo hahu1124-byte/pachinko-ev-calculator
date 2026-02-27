@@ -1,4 +1,4 @@
-// [v54] 2026-02-27 - モジュール分割・コードブラッシュアップ
+// [v55] 2026-02-27 - UI中央寄せ・共有レイアウト微調整
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
