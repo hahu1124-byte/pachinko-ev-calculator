@@ -249,6 +249,39 @@ input[type="range"] {
     color: var(--accent);
 }
 
+/* 履歴セクションのヘッダー調整 */
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.history-header h2 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* 更新ボタン（紫色） */
+.btn-purple {
+    background: #8B5CF6; /* Violet 500 */
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btn-purple:hover {
+    background: #7C3AED; /* Violet 600 */
+}
+
 .amount {
     font-size: 1.75rem;
     font-weight: 700;

@@ -1,4 +1,4 @@
-// [v39] 2026-02-27 - バージョン管理・ロールバック・履歴制限の運用ルールを導入 & レスポンス改善
+// [v40] 2026-02-27 - UI修正（更新ボタン移動・紫色変更、ボタン順序入れ替え） & バージョン管理強化
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;

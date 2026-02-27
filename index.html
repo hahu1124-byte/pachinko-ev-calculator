@@ -13,29 +13,6 @@
     <div class="container">
         <header>
             <h1>パチンコ期待値計算ツール</h1>
-            <button type="button" id="force-reload-btn"
-                style="margin-bottom: 1.5rem; padding: 0.5rem 1.5rem; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
-                更新
-            </button>
-            <script>
-                // スーパーリロード: 全キャッシュを破棄してリロード
-                document.getElementById('force-reload-btn').addEventListener('click', async () => {
-                    try {
-                        // Cache API の全キャッシュを削除
-                        if ('caches' in window) {
-                            const keys = await caches.keys();
-                            await Promise.all(keys.map(k => caches.delete(k)));
-                        }
-                        // Service Worker があれば登録解除
-                        if ('serviceWorker' in navigator) {
-                            const regs = await navigator.serviceWorker.getRegistrations();
-                            await Promise.all(regs.map(r => r.unregister()));
-                        }
-                    } catch (e) { console.warn('Cache clear error:', e); }
-                    // タイムスタンプ付きURLでページ自体のキャッシュも回避
-                    location.href = location.pathname + '?reload=' + Date.now();
-                });
-            </script>
         </header>
 
         <main>
@@ -219,12 +196,16 @@
 
             <aside class="history-column card">
                 <div style="margin-bottom: 1rem;">
-                    <h2 style="margin-bottom: 0.75rem;">保存済み履歴</h2>
-                    <div style="display: flex; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap;">
-                        <button type="button" id="delete-selected-btn"
-                            style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
+                    <div class="history-header">
+                        <h2 style="margin-bottom: 0;">保存済み履歴</h2>
+                        <button type="button" id="force-reload-btn" class="btn-purple">更新</button>
+                    </div>
+                    <div
+                        style="display: flex; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap; margin-top: 0.75rem;">
                         <button type="button" id="select-all-btn"
                             style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全選択</button>
+                        <button type="button" id="delete-selected-btn"
+                            style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
                         <button type="button" id="share-line-btn"
                             style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
                         <button type="button" id="toggle-format-btn"
@@ -274,9 +255,25 @@
             </p>
         </footer>
     </div>
-    <script src="share.js?v=45"></script>
-    <script src="utils.js?v=45"></script>
-    <script src="app.js?v=45"></script>
+    <script>
+        // スーパーリロード: 全キャッシュを破棄してリロード
+        document.getElementById('force-reload-btn').addEventListener('click', async () => {
+            try {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                }
+            } catch (e) { console.warn('Cache clear error:', e); }
+            location.href = location.pathname + '?reload=' + Date.now();
+        });
+    </script>
+    <script src="share.js?v=40"></script>
+    <script src="utils.js?v=40"></script>
+    <script src="app.js?v=40"></script>
 </body>
 
 </html>
