@@ -1,4 +1,4 @@
-// [v43] 2026-02-27 - 不具合修正：日時表示バグ修正 & デフォルトON化 & 共有同期再点検
+// [v44] 2026-02-27 - 統計日時反映・表示ずれ修正・チェック状態保持
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -599,6 +599,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory() {
         if (!historyList) return;
         try {
+            // チェック済みIDを保存
+            const checkedIds = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
             historyList.innerHTML = '';
 
             let sumInvestK = 0;
@@ -676,12 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (isCompactHistory) {
                     const text = `${dateText}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
-                    div.innerHTML = `
-                         <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">
-                            ${text}
-                        </div>
-                        <input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">
-                    `;
+                    div.innerHTML = `<div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">${text}</div><input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">`;
                 } else {
                     div.style.padding = '0';
                     div.style.borderBottom = 'none';
@@ -719,8 +716,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (isCompactHistory) {
                     // 詳細表示モード（昔はcompactと呼んでいた方、今はtrueで詳細）
+                    const statDateText = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
                     summaryBox.style.display = 'block';
-                    summaryBox.textContent = `総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
+                    summaryBox.style.whiteSpace = 'pre-wrap';
+                    summaryBox.textContent = `${statDateText}総投資/${sumInvestK.toFixed(3)}k/通常回転数/${sumSpins}/回転率${avgTurn}/使用現金${sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${sumBonusRounds}/総獲得玉${Math.round(sumAcquiredBalls)}/総差玉${sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
                     if (historyTotalEv) historyTotalEv.parentElement.style.display = 'none';
                     if (historyAvgBallEv) historyAvgBallEv.parentElement.style.display = 'none';
                 } else {
@@ -747,6 +746,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         historyAvgBallEv.textContent = `¥${avg.toFixed(2)}`;
                     }
                 }
+            }
+
+            // チェック状態を復元
+            if (checkedIds.length > 0) {
+                checkedIds.forEach(id => {
+                    const cb = document.querySelector(`.history-checkbox[data-id="${id}"]`);
+                    if (cb) cb.checked = true;
+                });
             }
         } catch (e) {
             console.error('History Rendering Error:', e);
