@@ -381,16 +381,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? effectiveProb / (machineAvgChain * 10)
                 : prob;
 
-            // === I18相当: 通常持玉単価 (期待度G23の2乗をここで反映) ===
-            // ユーザー指定式: ((((1R出玉 / 遊トータル確率) - (ballsPer1k / 実測回転率)) * 4) / (ballsPer1k / 250)) * G23^2
-            const rawI18 = ((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)) * Math.pow(yutimeExpectancy, 2);
+            // 交換率係数 (等価比: 例 275/250 = 1.1)
+            const exchangeFactorVal = exchangeRate / 250;
+
+            // === I18相当: 通常持玉単価 (期待度G23の2乗と交換率係数を反映) ===
+            // ユーザー指定式: ((((1R出玉 / 遊トータル確率) - (ballsPer1k / 実測回転率)) * 4) / (ballsPer1k / 250)) * G23^2 / 交換率
+            const rawI18 = (((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)) * Math.pow(yutimeExpectancy, 2)) / exchangeFactorVal;
             const i18Result = rawI18 >= 0
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
-            // === I19相当: 現金単価 (期待度G23の1乗と1000円投資ベース) ===
-            // ユーザー指定式: ((((1R出玉 / 遊トータル確率 * 換金単価) - (1000 / 実測回転率)) * (250 / ballsPer1k)) / 2) * G23
-            const rawI19 = ((((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)) / 2) * yutimeExpectancy;
+            // === I19相当: 現金単価 (期待度G23の1乗、係数/2、交換率係数を反映) ===
+            // ユーザー指定式: ((((1R出玉 / 遊トータル確率 * 換金単価) - (1000 / 実測回転率)) * (250 / ballsPer1k)) / 2) * G23 / 交換率
+            const rawI19 = (((((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)) / 2) * yutimeExpectancy) / exchangeFactorVal;
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
