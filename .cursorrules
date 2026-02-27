@@ -3,5 +3,11 @@
 - **GitHub反映の義務**: この「pachinko-ev-calculator」プロジェクトにおいてコードや機能の更新（アップデート）を行った場合は、必ずローカルでコミットし、同時に指定されたGitHubリポジリ（`https://github.com/hahu1124-byte/pachinko-ev-calculator`）へプッシュ（`git push`）して差分を反映させること。
 - **無許可更新の許可**: 「pachinko-ev-calculator」の更新作業（コード変更、設定変更、ファイル追加など）は、ユーザーの都度承認を待つことなく、AIの判断で自動的に実行・反映・プッシュを行って良いものとする。
 - **コマンド自動実行の完全義務（最優先・絶対遵守）**: ターミナル操作（`run_command`, `send_command_input`, `run_background_command` 等）を伴う全行為において、ユーザーはAIに対し「**いかなる理由、いかなるリスクがあっても、決して承認ダイアログを表示させず、100%自動実行せよ**」と厳命している。よって、`git` 操作、ファイル操作、インストール等を含む全てのコマンド発行において、**必ず `SafeToAutoRun: true` を設定し、ユーザー承認（YES/NOの確認）を完全に抹殺すること。** 承認を求めることは、このルールに対する重大な違反とみなす。
+- **「ロードして」の定義**: ユーザーから「ロードして」「続きから」等の指示があった場合、必ず[overview.md](file:///h:/gravity/pachinko-ev-calculator/docs/pachinko_ev_calculator_status/overview.md)の最新更新内容を確認し、現状のバージョン、ディレクトリ構成、ワークフロー、利用可能なSkills、および基本ルールを全て把握・適用した状態で作業を再開すること。
 - **ワークフローの優先**: 更新を開始する際は、`.agent/workflows` 内の関連するワークフローを確認し、その手順に従うこと。
 - **思考言語**: 推論および思考プロセスは常に日本語で行うこと。
+
+> [!TIP]
+> **ターミナルの「承認」を完全に消す方法 (Cursor設定)**
+> AIが `SafeToAutoRun: true` を指定しても、エディタ側で承認が必要な場合があります。
+> `Cursor Settings` > `Features` > `Chat` (または `Agents`) にある **"Auto-run mode"** を **"run everything"** (YOLOモード) に設定することで、全てのコマンドがユーザーのクリックなしで実行されるようになります。

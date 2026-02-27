@@ -1,4 +1,4 @@
-// [v55] 2026-02-27 - UI中央寄せ・共有レイアウト微調整
+// [v56] 2026-02-27 - 履歴レイアウトの余白調整（詳細モード）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
