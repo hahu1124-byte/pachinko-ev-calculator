@@ -1,4 +1,4 @@
-// [v50] 2026-02-27 - 統計データの選択項目反映・機種内訳フォーマット変更（○台）
+// [v51] 2026-02-27 - 履歴表示フィルタの復元・メンテナンスルール強化
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -680,62 +680,65 @@ document.addEventListener('DOMContentLoaded', () => {
             const machineInfoText = machinesOldestFirst.map(name => `${name} (${machineCounts[name]}台)`).join(' / ');
 
             historyData.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.style.padding = '0.75rem';
-                div.style.position = 'relative';
-                div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                // 表示対象のレートのみレンダリング
+                if ((item.playRate || 4) == currentSummaryRate) {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.style.padding = '0.75rem';
+                    div.style.position = 'relative';
+                    div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
 
-                const mName = item.machineName || "不明";
-                const invK = (item.totalInvestedK || 0).toFixed(3);
-                const spins = item.totalSpinsMeasured || 0;
-                let turn = (item.turnRate || 0).toFixed(2);
+                    const mName = item.machineName || "不明";
+                    const invK = (item.totalInvestedK || 0).toFixed(3);
+                    const spins = item.totalSpinsMeasured || 0;
+                    let turn = (item.turnRate || 0).toFixed(2);
 
-                // 4円以外なら4P換算の回転率を併記する処理
-                if (item.playRate && item.playRate != 4) {
-                    const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
-                    turn = `${turn}(${turn4p})`;
-                }
-
-                const cshK = (item.cashInvestedK || 0).toFixed(2);
-                const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
-                const br = item.bonusRounds || '';
-                const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
-                const diff = (item.diffBalls || 0).toLocaleString();
-                const ballEv = (item.valuePerSpin || 0).toFixed(1);
-                const work = Math.round(item.dailyEV || 0).toLocaleString();
-                const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
-                const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
-
-                const dateText = showDate ? `${formatHistoryDate(item.id)}\n` : '';
-
-                if (isCompactHistory) {
-                    const text = `${dateText}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
-                    div.innerHTML = `<div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">${text}</div><input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">`;
-                } else {
-                    div.style.padding = '0';
-                    div.style.borderBottom = 'none';
-                    let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
+                    // 4円以外なら4P換算の回転率を併記する処理
                     if (item.playRate && item.playRate != 4) {
-                        turnDisplayText += ` (4P換算: ${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
+                        const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
+                        turn = `${turn}(${turn4p})`;
                     }
-                    div.innerHTML = `
-                        <div class="history-item-header">
-                            <h4 style="display: flex; flex-direction: column;">
-                                ${showDate ? `<span style="font-size:0.7rem; color:#94A3B8; margin-bottom: 2px;">${formatHistoryDate(item.id)}</span>` : ''}
-                                <span>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></span>
-                            </h4>
-                            <input type="checkbox" class="history-checkbox" data-id="${item.id}">
-                        </div>
-                        <div class="history-item-body">
-                            <p><span>回転率:</span> <span>${turnDisplayText} (${item.totalSpinsMeasured || 0}回転)</span></p>
-                            <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
-                            <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
-                        </div>
-                    `;
-                }
 
-                historyList.appendChild(div);
+                    const cshK = (item.cashInvestedK || 0).toFixed(2);
+                    const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
+                    const br = item.bonusRounds || '';
+                    const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
+                    const diff = (item.diffBalls || 0).toLocaleString();
+                    const ballEv = (item.valuePerSpin || 0).toFixed(1);
+                    const work = Math.round(item.dailyEV || 0).toLocaleString();
+                    const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
+                    const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
+
+                    const dateText = showDate ? `${formatHistoryDate(item.id)}\n` : '';
+
+                    if (isCompactHistory) {
+                        const text = `${dateText}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
+                        div.innerHTML = `<div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4; white-space: pre-wrap;">${text}</div><input type="checkbox" class="history-checkbox" data-id="${item.id}" style="position: absolute; right: 0.5rem; top: 0.75rem; transform: scale(1.2);">`;
+                    } else {
+                        div.style.padding = '0';
+                        div.style.borderBottom = 'none';
+                        let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
+                        if (item.playRate && item.playRate != 4) {
+                            turnDisplayText += ` (4P換算: ${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
+                        }
+                        div.innerHTML = `
+                            <div class="history-item-header">
+                                <h4 style="display: flex; flex-direction: column;">
+                                    ${showDate ? `<span style="font-size:0.7rem; color:#94A3B8; margin-bottom: 2px;">${formatHistoryDate(item.id)}</span>` : ''}
+                                    <span>${item.machineName || "不明な機種"} <span style="font-size:0.75rem; color:#94A3B8;">(${item.playRate || "?"}円)</span></span>
+                                </h4>
+                                <input type="checkbox" class="history-checkbox" data-id="${item.id}">
+                            </div>
+                            <div class="history-item-body">
+                                <p><span>回転率:</span> <span>${turnDisplayText} (${item.totalSpinsMeasured || 0}回転)</span></p>
+                                <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
+                                <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
+                            </div>
+                        `;
+                    }
+
+                    historyList.appendChild(div);
+                }
             });
 
             const summaryBox = document.getElementById('history-summary-container');

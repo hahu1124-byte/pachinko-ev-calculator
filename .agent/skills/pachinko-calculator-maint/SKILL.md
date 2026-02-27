@@ -51,13 +51,15 @@ description: pachinko-ev-calculatorの更新・修正作業を円滑に行うた
 - [overview.md](file:///h:/gravity/pachinko-ev-calculator/docs/pachinko_ev_calculator_status/overview.md) の「更新履歴」セクションにおいて、記録は最新5件までを保持します。
 - それ以前の古い内容（コードや設定）に戻す必要がある場合、あるいは大規模な変更を伴う場合は、必ず事前にユーザーの再確認と承認を得る必要があります。
 
-### C. ロールバック手順
+### D. リファクタリング時のコード整合性チェック
 
-重大な不具合が発生した場合は、以下の手順で以前の安定版に戻します。
+- `renderHistory` などの複雑な描画ループを修正・リファクタリングする際は、以下の要素が不当に削除されていないか厳重に確認してください。
+  - **機種/レートフィルタ**: `if ((item.playRate || 4) == currentSummaryRate)` 等。これがないと全データが表示・計算されます。
+  - **要素作成ステートメント**: `const div = document.createElement('div')` 等。これがないと ReferenceError が発生し描画が止まります。
+  - **DOMへの追加**: `historyList.appendChild(div)` 等。
+- 修正後は必ず構文エラーや未定義変数の参照がないか、コード全体を再点検してください。
 
-1. 現在の変更を退避または破棄する (`git reset --hard`).
-2. 以前のタグに切り替える (`git checkout v○○`).
-3. 必要に応じて修正を行い、新バージョンとして再度デプロイする。
+### E. ロールバック手順
 
 ### D. ファイル分割の判断
 
