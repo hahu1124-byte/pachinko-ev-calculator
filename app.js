@@ -388,10 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? (rawI18 / conversionFactor)
                 : (rawI18 * conversionFactor);
 
-            // === I19相当: 現金単価 ===
-            // 消費金額も4円ベース(1000円)からレート基準の可変金額へ
-            const cashInvestPer1k = (ballsPer1k / 250) * 1000;
-            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (cashInvestPer1k / turnRatePer1k)) * (250 / ballsPer1k);
+            const rawI19 = ((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k);
             const i19Result = rawI19 >= 0
                 ? (rawI19 / conversionFactor)
                 : (rawI19 * conversionFactor);
@@ -407,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 : ((i19Result * conversionFactor) / yutimeExpectancy);
 
             // === J20相当: 遊タイム持玉比率単価 ===
-            // ユーザー指定式: ((K18 * G23) * 持玉比率) + ((K19 / 2 * G23 ) * (1 - 持玉比率))
-            yutimeValuePerSpin = ((yutimeBallUnitPriceResult * yutimeExpectancy) * ballRatio) + ((yutimeCashUnitPriceResult / 2 * yutimeExpectancy) * (1 - ballRatio));
+            // ユーザー指定式: ((K18 * G23) * 持玉比率) + ((K19 * G23) * (1 - 持玉比率))
+            yutimeValuePerSpin = ((yutimeBallUnitPriceResult * yutimeExpectancy) * ballRatio) + ((yutimeCashUnitPriceResult * yutimeExpectancy) * (1 - ballRatio));
 
             // 遊タイム期待値 = 遊タイム持玉比率単価 * 総実測回転数
             yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
