@@ -1,4 +1,4 @@
-// [v57] 2026-02-27 - 履歴チェックボックスの配置修正（重なり解消）
+// [v58] 2026-02-27 - 統計セクションの演出強化（カウントアップ・オーラ）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;

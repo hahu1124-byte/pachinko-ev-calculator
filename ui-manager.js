@@ -123,10 +123,22 @@ const UIManager = {
                 const statDateText = showDate ? `${formatHistoryDate(Date.now())} ` : '';
                 summaryBox.style.display = 'block';
                 summaryBox.style.whiteSpace = 'pre-wrap';
-                summaryBox.textContent = `${statDateText}${machineInfoText}\n総投資/${stats.sumInvestK.toFixed(3)}k/通常回転数/${stats.sumSpins}/回転率${avgTurn}/使用現金${stats.sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${stats.sumBonusRounds}/総獲得玉${Math.round(stats.sumAcquiredBalls)}/総差玉${stats.sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥${Math.round(stats.sumWork).toLocaleString()}/持比${avgBallRatio}%/🎯or台毎数${count}`;
+
+                // サマリーオーラの適用
+                summaryBox.classList.remove('summary-aura-green', 'summary-aura-gold');
+                if (stats.sumWork >= 30000) summaryBox.classList.add('summary-aura-gold');
+                else if (stats.sumWork > 0) summaryBox.classList.add('summary-aura-green');
+
+                summaryBox.innerHTML = `${statDateText}${machineInfoText}\n総投資/${stats.sumInvestK.toFixed(3)}k/通常回転数/${stats.sumSpins}/回転率${avgTurn}/使用現金${stats.sumCashK.toFixed(2)}k/RB${avgRb}/総R回数${stats.sumBonusRounds}/総獲得玉${Math.round(stats.sumAcquiredBalls)}/総差玉${stats.sumDiffBalls.toLocaleString()}/単(持)${avgBallEv}/期待値￥<span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span>/持比${avgBallRatio}%/🎯or台毎数${count}`;
             } else {
                 summaryBox.style.display = 'block';
                 summaryBox.style.whiteSpace = 'normal';
+
+                // サマリーオーラの適用
+                summaryBox.classList.remove('summary-aura-green', 'summary-aura-gold');
+                if (stats.sumWork >= 30000) summaryBox.classList.add('summary-aura-gold');
+                else if (stats.sumWork > 0) summaryBox.classList.add('summary-aura-green');
+
                 summaryBox.innerHTML = `
                     <div class="history-item-body" style="padding: 0;">
                         ${showDate ? `<p style="margin-bottom: 0.5rem;"><span>算出日時:</span> <span style="display: block; text-align: right; margin-top: 2px;">${formatHistoryDate(Date.now())}</span></p>` : ''}
@@ -135,10 +147,18 @@ const UIManager = {
                         <p><span>通常回転数:</span> <span>${stats.sumSpins}回</span></p>
                         <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
                         <p><span>平均持比単価:</span> <span>${avgBallEv}</span></p>
-                        <p><span>総期待値:</span> <span>￥${Math.round(stats.sumWork).toLocaleString()}</span></p>
+                        <p><span>総期待値:</span> <span class="${stats.sumWork >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">￥<span id="history-summary-ev-total">${Math.round(stats.sumWork).toLocaleString()}</span></span></p>
                         <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #94A3B8;">(台数: ${count} / 持比: ${avgBallRatio}%)</p>
                     </div>
                 `;
+            }
+            // カウントアップ演出の実行
+            const summaryEvElem = document.getElementById('history-summary-ev-total');
+            if (summaryEvElem) {
+                this.animateEV(Math.round(stats.sumWork), summaryEvElem);
+                // プラスの場合は色強調
+                if (stats.sumWork >= 30000) summaryEvElem.classList.add('text-highlight-gold');
+                else if (stats.sumWork > 0) summaryEvElem.classList.add('text-highlight-green');
             }
         }
         return stats;
