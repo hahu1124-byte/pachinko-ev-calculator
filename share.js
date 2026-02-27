@@ -83,11 +83,11 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
             const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
             const diff = (item.diffBalls || 0).toLocaleString();
             const ballEv = (item.valuePerSpin || 0).toFixed(1);
-            const work = Math.round(item.dailyEV || 0).toLocaleString();
+            const work = formatCurrency(Math.round(item.dailyEV || 0));
             const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
             const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-            text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n`;
+            text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%${rateSuffix}\n`;
         } else {
             text += `${dateLine}🎰 ${item.machineName || "不明な機種"} (${item.playRate || "?"}円)\n`;
             text += `回転率: ${turnText}\n`;
@@ -103,7 +103,8 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
             availableRates.forEach(rate => {
                 const s = getStatsByRate(shareData, rate);
                 const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
-                text += `${dateStat}${s.machineInfoText}\n【${rate}円】総投資/${s.sumInvestK.toFixed(3)}k/通常回転数/${s.sumSpins}/回転率${s.avgTurn}/使用現金${s.sumCashK.toFixed(2)}k/RB${s.avgRb}/総R回数${s.sumBonusRounds}/総獲得玉${Math.round(s.sumAcquiredBalls)}/総差玉${s.sumDiffBalls.toLocaleString()}/単(持)${s.avgBallEv}/期待値￥${Math.round(s.sumWork).toLocaleString()}/持比${s.avgBallRatio}%/🎯or台毎数${s.count}\n\n`;
+                const sumWorkFormatted = formatCurrency(Math.round(s.sumWork));
+                text += `${dateStat}${s.machineInfoText}\n【${rate}円】総投資/${s.sumInvestK.toFixed(3)}k/通常回転数/${s.sumSpins}/回転率${s.avgTurn}/使用現金${s.sumCashK.toFixed(2)}k/RB${s.avgRb}/総R回数${s.sumBonusRounds}/総獲得玉${Math.round(s.sumAcquiredBalls)}/総差玉${s.sumDiffBalls.toLocaleString()}/単(持)${s.avgBallEv}/期待値${sumWorkFormatted}/持比${s.avgBallRatio}%/🎯or台毎数${s.count}\n\n`;
             });
         } else {
             availableRates.forEach((rate, index) => {
@@ -112,7 +113,7 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 text += `${dateStat}${s.machineInfoText}\n【${rate}円 統計】\n`;
                 text += `💰 合計期待値: ${formatCurrency(Math.round(s.sumWork))}\n`;
                 text += `📈 平均回転率: ${s.avgTurn} / 1k\n`;
-                text += `✨ 平均持比単価: ¥${s.avgBallEv}\n`;
+                text += `✨ 平均持比単価: ${formatSpinValue(parseFloat(s.avgBallEv))}\n`;
                 if (index < availableRates.length - 1) {
                     text += `--------------------\n`;
                 }
@@ -137,10 +138,10 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
                 const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
                 const diff = (item.diffBalls || 0).toLocaleString();
                 const ballEv = (item.valuePerSpin || 0).toFixed(1);
-                const work = Math.round(item.dailyEV || 0).toLocaleString();
+                const work = formatCurrency(Math.round(item.dailyEV || 0));
                 const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
                 const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
-                text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}\n\n`;
+                text += `${dateLine}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%${rateSuffix}\n\n`;
             } else {
                 const dailyEV = item.dailyEV || 0;
                 let turnText = `${(item.turnRate || 0).toFixed(2)} / 1k - 通常${item.totalSpinsMeasured || 0}回転`;

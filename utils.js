@@ -8,7 +8,7 @@ function formatCurrency(amount) {
 function formatSpinValue(value) {
     const absValue = Math.abs(value);
     const formatted = absValue.toFixed(2);
-    return value < 0 ? `-¥${formatted}` : `+¥${formatted}`;
+    return value < 0 ? `￥-${formatted}` : `￥+${formatted}`;
 }
 
 // 引用符付きCSVを正しくパースする関数 (セル内改行・カンマ対応)

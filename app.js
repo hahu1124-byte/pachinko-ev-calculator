@@ -1,4 +1,4 @@
-// [v61] 2026-02-27 - ログ管理ルールの刷新（最新を上、ファイル分割導入）
+// [v62] 2026-02-27 - コードの是正・ブラッシュアップ（リファクタリング、通貨フォーマット統一）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         measuredRbDisplay.textContent = res.measuredRb > 0 ? `${res.measuredRb.toFixed(2)} 玉` : '-- 玉';
 
         if (res.activeBorderBase <= 0 || isNaN(res.activeBorderBase) || res.turnRatePer1k <= 0 || res.totalSpinsMeasured <= 0) {
-            evDailyDisplay.textContent = '¥0';
+            evDailyDisplay.textContent = '￥0';
             totalSpinsDisplay.textContent = '0 回転';
             noteDisplay.textContent = res.activeBorderBase <= 0 ? '機種を選択してください。' : '実戦データを入力すると自動計算されます。';
             return;
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (historyAvgBallEv) {
             historyAvgBallEv.parentElement.style.display = isCompactHistory ? 'none' : 'flex';
             const avg = stats.sumSpins > 0 ? (stats.sumWork / stats.sumSpins) : 0;
-            historyAvgBallEv.textContent = `¥${avg.toFixed(2)}`;
+            historyAvgBallEv.textContent = formatSpinValue(avg);
         }
 
         // チェック状態復元とイベント
