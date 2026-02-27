@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasYutime = machineYutimeLimit > 0 && primaryProb > 0;
 
         if (hasYutime) {
-            const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - currentSpin);
+            const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - startSpin);
 
             // === G23: 遊タイム期待度 (天井到達率) ===
             // CSV 16行目の「遊タイム回数」を指数に使用（大海5SP = 350）
