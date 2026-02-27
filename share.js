@@ -133,7 +133,7 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
         } else {
             availableRates.forEach(rate => {
                 const s = getStatsByRate(shareData, rate);
-                const dateStat = showDate ? `${formatHistoryDate(Date.now())}\n` : '';
+                const dateStat = showDate ? `${formatHistoryDate(Date.now())} ` : '';
                 text += `${dateStat}機種内訳: ${s.machineInfoText}\n【${rate}円 統計】\n`;
                 text += `💰 合計期待値: ${formatCurrency(Math.round(s.sumWork))}\n`;
                 text += `📈 平均回転率: ${s.avgTurn} / 1k\n`;
