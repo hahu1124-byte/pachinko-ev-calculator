@@ -1,4 +1,4 @@
-// [v46] 2026-02-27 - チェック保持バグ修正（DOM優先マージ）・履歴クリーンアップ追加
+// [v47] 2026-02-27 - showDate永続化・チェック保持の根本修正（全選択対応）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -814,6 +814,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkboxes = document.querySelectorAll('.history-checkbox');
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
             checkboxes.forEach(cb => cb.checked = !allChecked);
+            // 全選択/解除後にsessionStorageを即時更新
+            const currentChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(c => parseInt(c.getAttribute('data-id')));
+            sessionStorage.setItem('checkedHistoryIds', JSON.stringify(currentChecked));
         });
     }
 
@@ -883,7 +886,8 @@ document.addEventListener('DOMContentLoaded', () => {
             exchangeRate: exchangeRateSelect.value,
             customExchange: customExchangeInput.value,
             machineSelect: machineSelect.value,
-            isCompactHistory: isCompactHistory
+            isCompactHistory: isCompactHistory,
+            showDate: showDate
         };
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
     }
@@ -932,6 +936,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         toggleFormatBtn.style.background = isCompactHistory ? '#64748b' : '#3b82f6';
                     }
                 }
+
+                // 日時表示状態の復元
+                if (settings.showDate !== undefined) {
+                    showDate = settings.showDate;
+                    if (toggleDateBtn) {
+                        toggleDateBtn.classList.toggle('btn-on', showDate);
+                    }
+                }
             } catch (e) {
                 console.error("Failed to load settings from localStorage", e);
             }
@@ -944,6 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleDateBtn.addEventListener('click', () => {
             showDate = !showDate;
             toggleDateBtn.classList.toggle('btn-on', showDate);
+            saveSettings();
             renderHistory();
         });
     }
