@@ -1,4 +1,4 @@
-// [v52] 2026-02-27 - 履歴消失バグの修正（変数定義漏れ解消）とループ集約による最適化
+// [v53] 2026-02-27 - 統計データのリアルタイム更新（チェック連動）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -798,11 +798,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (cb) cb.checked = true;
                 });
             }
-            // チェックボックスの変更時にsessionStorageを更新
+            // チェックボックスの変更時にsessionStorageを更新し、統計を再計算
             document.querySelectorAll('.history-checkbox').forEach(cb => {
                 cb.addEventListener('change', () => {
                     const currentChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(c => parseInt(c.getAttribute('data-id')));
                     sessionStorage.setItem('checkedHistoryIds', JSON.stringify(currentChecked));
+                    // 統計エリアのみの更新ではなくリスト全体の再描画になるが、UX上許容範囲と判断
+                    renderHistory();
                 });
             });
         } catch (e) {
@@ -851,9 +853,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkboxes = document.querySelectorAll('.history-checkbox');
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
             checkboxes.forEach(cb => cb.checked = !allChecked);
-            // 全選択/解除後にsessionStorageを即時更新
+            // 全選択/解除後にsessionStorageを即時更新し、統計を再計算
             const currentChecked = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(c => parseInt(c.getAttribute('data-id')));
             sessionStorage.setItem('checkedHistoryIds', JSON.stringify(currentChecked));
+            renderHistory();
         });
     }
 
