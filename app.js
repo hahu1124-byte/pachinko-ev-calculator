@@ -1,4 +1,4 @@
-// [v40] 2026-02-27 - UI修正（更新ボタン移動・紫色変更、ボタン順序入れ替え） & バージョン管理強化
+// [v41] 2026-02-27 - 日時表示機能追加 & 期待値表示の演出向上（スロット風・称号・オーラ）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyData = JSON.parse(localStorage.getItem('pachinkoHistory')) || [];
     let latestCalculation = null;
     let isCompactHistory = false; // true = 詳細(v38以降の区切り), false = 簡略(v37相当・デフォルト)
+    let showDate = false; // 日時表示フラグ
     let currentSummaryRate = null; // 統計表示で現在選択されている貸玉レート
 
     // UI切り替えロジック
@@ -523,7 +524,60 @@ document.addEventListener('DOMContentLoaded', () => {
             evDailyDisplay.className = 'amount';
             noteDisplay.textContent = '期待値プラマイゼロのラインです。';
         }
+
+        // --- 遊びの演出 (v41) ---
+        animateEV(Math.round(mainEV));
+        updateEVBadgeAndAura(Math.round(mainEV));
+
         console.log('Calculation complete. latestCalculation updated:', latestCalculation.id);
+    }
+
+    // カウントアップアニメーション
+    function animateEV(targetValue) {
+        const startValue = 0;
+        const duration = 800;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeOutQuad = t => t * (2 - t);
+            const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutQuad(progress));
+
+            evDailyDisplay.textContent = formatCurrency(currentValue);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    // バッジとオーラ演出の更新
+    function updateEVBadgeAndAura(ev) {
+        const evBox = document.getElementById('ev-box');
+        const badge = document.getElementById('ev-badge');
+        if (!evBox || !badge) return;
+
+        // 一旦リセット
+        evBox.classList.remove('ev-aura');
+        badge.classList.add('hidden');
+
+        if (ev >= 20000) {
+            evBox.classList.add('ev-aura');
+            badge.textContent = '⭐大勝利の予感';
+            badge.classList.remove('hidden');
+        } else if (ev >= 10000) {
+            evBox.classList.add('ev-aura');
+            badge.textContent = '✨期待大';
+            badge.classList.remove('hidden');
+        } else if (ev > 0) {
+            badge.textContent = '👍プラス';
+            badge.classList.remove('hidden');
+        } else if (ev < 0) {
+            badge.textContent = '⚠️要注意';
+            badge.classList.remove('hidden');
+        }
     }
 
     function renderHistory() {
@@ -603,7 +657,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
                 if (isCompactHistory) {
-                    const text = `${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
+                    const dateStr = showDate ? `${formatHistoryDate(item.id)}\n` : '';
+                    const text = `${dateStr}${mName}/総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値￥${work}/持比${bRat}%${rateSuffix}`;
                     div.innerHTML = `
                          <div style="font-size: 0.8rem; word-break: break-all; padding-right: 24px; line-height: 1.4;">
                             ${text}
@@ -653,6 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     summaryBox.style.display = 'block';
                     summaryBox.innerHTML = `
                         <div class="history-item-body" style="padding: 0;">
+                            ${showDate ? `<p><span>算出日時:</span> <span>${formatHistoryDate(Date.now())}</span></p>` : ''}
                             <p><span>総投資:</span> <span>${sumInvestK.toFixed(3)}k</span></p>
                             <p><span>通常回転数:</span> <span>${sumSpins}回</span></p>
                             <p><span>平均回転率:</span> <span>${avgTurn} / 1k</span></p>
@@ -841,6 +897,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Failed to load settings from localStorage", e);
             }
         }
+    }
+
+    // 日時表示切り替え
+    const toggleDateBtn = document.getElementById('toggle-date-btn');
+    if (toggleDateBtn) {
+        toggleDateBtn.addEventListener('click', () => {
+            showDate = !showDate;
+            toggleDateBtn.classList.toggle('btn-on', showDate);
+            renderHistory();
+        });
+    }
+
+    function formatHistoryDate(timestamp) {
+        const d = new Date(timestamp);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const h = d.getHours();
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${y}/${m}/${dd} - ${h}:${mm}`;
     }
 
     // CSVロード前に一旦設定を復元する

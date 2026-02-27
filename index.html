@@ -140,10 +140,13 @@
                     <h2>期待値計算結果</h2>
 
                     <div class="result-grid">
-                        <div class="result-box ev">
+                        <div class="result-box ev" id="ev-box">
                             <h3>期待値</h3>
-                            <p class="amount" id="expected-value-daily"
-                                style="font-size: 2rem; margin: 0.5rem 0 0 0; text-align: center;">¥0</p>
+                            <div style="position: relative;">
+                                <p class="amount" id="expected-value-daily"
+                                    style="font-size: 2rem; margin: 0.5rem 0 0 0; text-align: center;">¥0</p>
+                                <div id="ev-badge" class="ev-badge hidden"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -202,14 +205,16 @@
                     </div>
                     <div
                         style="display: flex; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap; margin-top: 0.75rem;">
-                        <button type="button" id="select-all-btn"
-                            style="padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全選択</button>
+                        <button type="button" id="select-all-btn" class="btn-indigo"
+                            style="padding: 0.5rem 1rem; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">全選択</button>
                         <button type="button" id="delete-selected-btn"
                             style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">選択削除</button>
                         <button type="button" id="share-line-btn"
                             style="padding: 0.5rem 1rem; background: #06C755; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">共有</button>
                         <button type="button" id="toggle-format-btn"
                             style="padding: 0.5rem 1rem; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">簡略</button>
+                        <button type="button" id="toggle-date-btn"
+                            style="padding: 0.5rem 1rem; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">日時</button>
                     </div>
                     <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.5rem; text-align: right;">※選択時共有データ反映
                     </div>
@@ -271,9 +276,9 @@
             location.href = location.pathname + '?reload=' + Date.now();
         });
     </script>
-    <script src="share.js?v=40"></script>
-    <script src="utils.js?v=40"></script>
-    <script src="app.js?v=40"></script>
+    <script src="share.js?v=41"></script>
+    <script src="utils.js?v=41"></script>
+    <script src="app.js?v=41"></script>
 </body>
 
 </html>

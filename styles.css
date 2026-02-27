@@ -267,7 +267,8 @@ input[type="range"] {
 
 /* 更新ボタン（紫色） */
 .btn-purple {
-    background: #8B5CF6; /* Violet 500 */
+    background: #8B5CF6;
+    /* Violet 500 */
     color: white;
     border: none;
     padding: 0.4rem 1rem;
@@ -279,7 +280,63 @@ input[type="range"] {
 }
 
 .btn-purple:hover {
-    background: #7C3AED; /* Violet 600 */
+    background: #7C3AED;
+    /* Violet 600 */
+}
+
+/* インディゴボタン（全選択用） */
+.btn-indigo {
+    background: #6366F1;
+    /* Indigo 500 */
+}
+
+.btn-indigo:hover {
+    background: #4F46E5;
+    /* Indigo 600 */
+}
+
+/* 日時ボタンのオン状態 */
+.btn-on {
+    background: #F8FAFC !important;
+    color: #0F172A !important;
+}
+
+/* 期待値表示の演出（遊び） */
+.ev-aura {
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.4), inset 0 0 10px rgba(234, 179, 8, 0.2);
+    border-color: var(--accent) !important;
+    transition: all 0.5s ease-out;
+}
+
+.ev-badge {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    animation: bounce 0.5s ease-out;
+}
+
+@keyframes bounce {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
 }
 
 .amount {
