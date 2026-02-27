@@ -5,7 +5,7 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 console.log('[DEBUG] app.js start executing');
 
 document.addEventListener('DOMContentLoaded', () => {
-    // UI Elements
+    // UI要素
     const playRateRadios = document.querySelectorAll('input[name="play-rate"]');
     const exchangeRateSelect = document.getElementById('exchange-rate');
     const customExchangeInput = document.getElementById('custom-exchange');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hoursInput = document.getElementById('hours');
     const spinsPerHourInput = document.getElementById('spins-per-hour');
 
-    // Result Elements
+    // 結果表示要素
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const totalSpinsDisplay = document.getElementById('total-spins');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const yutimeValueRow = document.getElementById('yutime-value-row');
     const yutimeValuePerSpinDisplay = document.getElementById('yutime-value-per-spin');
 
-    // History Elements
+    // 履歴関連要素
     const saveHistoryBtn = document.getElementById('save-history-btn');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
     const shareLineBtn = document.getElementById('share-line-btn');
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCompactHistory = false; // true = 詳細(v38以降の区切り), false = 簡略(v37相当・デフォルト)
     let currentSummaryRate = null; // 統計表示で現在選択されている貸玉レート
 
-    // UI Toggle Logic
+    // UI切り替えロジック
     exchangeRateSelect.addEventListener('change', (e) => {
         if (e.target.value === 'custom') {
             customExchangeInput.classList.remove('hidden');
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('change', calculateEV);
     });
 
-    // Preset Machine Logic
+    // プリセット機種ロジック
     let machineData = [];
 
     // 初回の計算呼び出し（DOM未完全やデータ未ロード時のエラーで後続処理が止まるのを防ぐ）
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Initial calculateEV skipped or failed:', e);
     }
 
-    // Google Sheets CSV URL
+    // GoogleスプレッドシートのCSV URL
     const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_z1H5K62_019noNiZnxtSTOafCW4c5y4BghW62nHmOTneMx4JzVycIXAXHTdF9vxYSOjcnu7u3BK/pub?gid=493752965&single=true&output=csv';
 
 
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Main Calculation
+    // メイン計算処理
     function calculateEV() {
         // --- 1. 入力値の取得 ---
         const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);

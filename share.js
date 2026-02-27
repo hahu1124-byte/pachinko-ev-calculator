@@ -1,6 +1,6 @@
 let shareTargetUrl = 'https://line.me/R/msg/text/?';
 
-// ---  Share Logic ---
+// --- 共有ロジック ---
 function handleShareLineClick(historyData, isCompactHistory) {
     if (historyData.length === 0) {
         alert('共有する履歴がありません。');

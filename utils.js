@@ -1,4 +1,4 @@
-// Utilities
+// ユーティリティ関数群
 function formatCurrency(amount) {
     const absAmount = Math.abs(amount);
     const formatted = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(absAmount);
