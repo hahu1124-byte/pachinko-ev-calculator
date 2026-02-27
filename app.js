@@ -425,18 +425,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isFinite(mainEV)) mainEV = 0;
         if (!isFinite(finalValuePerSpin)) finalValuePerSpin = 0;
 
-        // UIラベルの変更 (持玉比率単価)
+        // UIラベルと表示値の更新
+        const isYutimeApplied = hasYutime && yutimeValuePerSpin > normalValuePerSpin;
+
+        // 1. ラベルの更新
         const valuePerSpinLabel = valuePerSpinDisplay.previousElementSibling;
         if (valuePerSpinLabel && valuePerSpinLabel.tagName.toLowerCase() === 'h3') {
-            valuePerSpinLabel.textContent = (hasYutime && yutimeValuePerSpin > normalValuePerSpin)
-                ? '持玉比率単価（遊）'
-                : '持玉比率単価';
+            valuePerSpinLabel.textContent = isYutimeApplied ? '持玉比率単価（遊）' : '持玉比率単価';
         }
 
+        const ballEvLabel = ballEvPerSpinDisplay.previousElementSibling;
+        if (ballEvLabel && ballEvLabel.tagName.toLowerCase() === 'h3') {
+            ballEvLabel.textContent = isYutimeApplied ? '持玉単価（遊）' : '持玉単価';
+        }
+
+        const cashEvLabel = cashEvPerSpinDisplay.previousElementSibling;
+        if (cashEvLabel && cashEvLabel.tagName.toLowerCase() === 'h3') {
+            cashEvLabel.textContent = isYutimeApplied ? '現金単価（遊）' : '現金単価';
+        }
+
+        // 2. 表示値の反映
         evDailyDisplay.textContent = formatCurrency(Math.round(mainEV));
         valuePerSpinDisplay.textContent = formatSpinValue(finalValuePerSpin);
-        ballEvPerSpinDisplay.textContent = formatSpinValue(normalBallUnitPrice);
-        cashEvPerSpinDisplay.textContent = formatSpinValue(normalCashUnitPrice);
+        ballEvPerSpinDisplay.textContent = formatSpinValue(isYutimeApplied ? yutimeBallUnitPriceResult : normalBallUnitPrice);
+        cashEvPerSpinDisplay.textContent = formatSpinValue(isYutimeApplied ? yutimeCashUnitPriceResult : normalCashUnitPrice);
 
         // 遊タイム情報の表示
         if (hasYutime) {
