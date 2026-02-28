@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startSpinInput = document.getElementById('start-spin');
     const currentSpinInput = document.getElementById('current-spin');
     const investCashInput = document.getElementById('invest-cash');
-    const investCashPreset = document.getElementById('invest-cash-preset');
+    const investCashPresetInt = document.getElementById('invest-cash-preset-int');
+    const investCashPresetDec = document.getElementById('invest-cash-preset-dec');
     const startBallsInput = document.getElementById('start-balls');
     const currentBallsInput = document.getElementById('current-balls');
     const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const assumedRbIntSelect = document.getElementById('assumed-rb-int');
     const assumedRbDecSelect = document.getElementById('assumed-rb-dec');
     const assumedRbDisplay = document.getElementById('assumed-rb-display');
+    const resetAssumedRbBtn = document.getElementById('reset-assumed-rb-btn');
     const prevLastBallsDisplay = document.getElementById('prev-last-balls-display');
 
     // 仮定RBプルダウンの生成 (0-200, 0-99)
@@ -34,6 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const opt = document.createElement('option');
         opt.value = i; opt.textContent = i;
         assumedRbIntSelect.appendChild(opt);
+
+        // 投資プルダウン(整数)も同様に0-200で生成
+        const invOpt = document.createElement('option');
+        invOpt.value = i; invOpt.textContent = i;
+        investCashPresetInt.appendChild(invOpt);
+    }
+    for (let i = 0; i <= 9; i++) {
+        const invDecOpt = document.createElement('option');
+        const val = i / 10;
+        invDecOpt.value = val; invDecOpt.textContent = i;
+        investCashPresetDec.appendChild(invDecOpt);
     }
     for (let i = 0; i <= 99; i++) {
         const opt = document.createElement('option');
@@ -73,7 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
         const exchangeRateBalls = exchangeRateSelect.value === 'custom' ? parseFloat(customExchangeInput.value) : parseFloat(exchangeRateSelect.value);
 
-        const investCashK = (parseFloat(investCashInput.value) || 0) + (parseFloat(investCashPreset.value) || 0);
+        const investCashK = (parseFloat(investCashInput.value) || 0) +
+            (parseFloat(investCashPresetInt.value) || 0) +
+            (parseFloat(investCashPresetDec.value) || 0);
 
         const customAssumedRb = parseFloat(assumedRbIntSelect.value) + (parseFloat(assumedRbDecSelect.value) / 100);
 
@@ -310,6 +325,18 @@ document.addEventListener('DOMContentLoaded', () => {
             assumedRbDisplay.textContent = val.toFixed(2);
         }
         calculateEV();
+    });
+
+    // 仮定RBを機種デフォルトにリセット
+    resetAssumedRbBtn?.addEventListener('click', () => {
+        const machine = machineData[machineSelect.value];
+        if (machine) {
+            const val = machine.rb || 0;
+            assumedRbIntSelect.value = Math.floor(val);
+            assumedRbDecSelect.value = Math.round((val % 1) * 100);
+            assumedRbDisplay.textContent = val.toFixed(2);
+            calculateEV();
+        }
     });
 
     // 入力クリアボタンのイベント
