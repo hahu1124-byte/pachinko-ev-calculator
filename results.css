@@ -1,0 +1,85 @@
+/**
+ * Pachinko EV Calculator - Results UI (v79.3)
+ * 計算結果の表示エリア、統計グリッド、注釈、フッターを管理します。
+ */
+
+.results-section {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 10px 0;
+    letter-spacing: -1px;
+}
+
+/* 期待値の正負に応じた色分け */
+.amount.positive {
+    color: var(--positive);
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.amount.negative {
+    color: var(--negative);
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+/* 下部の統計情報グリッド */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.result-box {
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.result-box span {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.result-box strong {
+    font-size: 1.1rem;
+    display: block;
+}
+
+/* 重要度に応じたハイライト用クラス */
+.highlight-purple {
+    color: #a78bfa;
+}
+
+.highlight-blue {
+    color: #60a5fa;
+}
+
+/* 備考・注意書き */
+.info-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: rgba(51, 65, 85, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.info-note strong {
+    color: var(--text-main);
+}
+
+/* フッター */
+footer {
+    text-align: center;
+    color: #475569;
+    font-size: 0.75rem;
+    padding: 20px 0;
+}

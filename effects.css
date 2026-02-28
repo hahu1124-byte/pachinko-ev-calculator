@@ -1,0 +1,75 @@
+/**
+ * Pachinko EV Calculator - Effects & Animations (v79.3)
+ * 特殊演出、オーラ、バッジ、アニメーションを管理します。
+ */
+
+/* 期待値レベル別のバッジ・演出設定 */
+.ev-level {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* 各レベルの配色 */
+.level-god {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 0 15px var(--gold);
+}
+
+.level-pro {
+    background: var(--positive);
+    color: white;
+}
+
+.level-plus {
+    background: #60a5fa;
+    color: white;
+}
+
+.level-minus {
+    background: var(--negative);
+    color: white;
+}
+
+/* オーラ演出（外枠の光） */
+.aura {
+    transition: box-shadow 0.3s ease;
+}
+
+.aura-platinum {
+    box-shadow: inset 0 0 20px rgba(226, 232, 240, 0.4), 0 0 20px rgba(226, 232, 240, 0.2);
+    border-color: #e2e8f0;
+}
+
+.aura-gold {
+    box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.2);
+    border-color: var(--gold);
+}
+
+.aura-red {
+    box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.4);
+    border-color: var(--negative);
+}
+
+/* アニメーション定義 */
+@keyframes pulse-gold {
+    0% {
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.7);
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+    }
+}
+
+.animate-gold {
+    animation: pulse-gold 2s infinite;
+}
