@@ -714,6 +714,50 @@ footer {
 }
 
 .history-summary-ev-highlight {
+    .history-summary-ev-highlight {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    /* v78 追加: 入力クリアボタン */
+    .input-with-clear {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .input-with-clear input {
+        padding-right: 2.5rem !important;
+        width: 100%;
+    }
+
+    .clear-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s;
+        z-index: 5;
+        user-select: none;
+    }
+
+    .clear-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--text-main);
+    }
+
     font-weight: bold;
     font-size: 1.1rem;
 }
