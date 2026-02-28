@@ -50,17 +50,20 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
     const selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id')));
 
     let shareData = [];
+    let isDefaultShare = false; // 何も選択されていないデフォルト状態か
+
     if (selectedIds.length > 0) {
         // チェックボックスで選択されたデータのみを抽出
         shareData = historyData.filter(item => selectedIds.includes(item.id));
     } else {
-        // 何も選択されていない場合は、ユーザーの利便性を考慮し「直近1件」をデフォルト共有対象とする
-        shareData = [historyData[0]];
+        // 何も選択されていない場合は、統計（全件）＋最新1件とする
+        shareData = historyData;
+        isDefaultShare = true;
     }
 
     let text = '📊 パチンコ期待値 履歴\n--------------------\n';
 
-    if (shareData.length === 1) {
+    if (!isDefaultShare && shareData.length === 1) {
         const item = shareData[0];
         const dailyEV = item.dailyEV || 0;
         let turnText = `${(item.turnRate || 0).toFixed(2)} / 1k - 通常${item.totalSpinsMeasured || 0}回転`;
@@ -123,7 +126,8 @@ function handleShareLineClick(historyData, isCompactHistory, showDate) {
         text = text.trimEnd() + '\n--------------------\n';
 
         // --- 個々のデータ（上から新しい順＝shareDataの順） ---
-        shareData.forEach(item => {
+        const displayData = isDefaultShare ? [shareData[0]] : shareData;
+        displayData.forEach(item => {
             const dateLine = showDate ? `${formatHistoryDate(item.id)}\n` : '';
             if (isCompactHistory) {
                 const mName = item.machineName || "不明";

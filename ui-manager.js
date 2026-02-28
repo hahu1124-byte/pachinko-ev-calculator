@@ -147,6 +147,20 @@ const UIManager = {
                 </div>
             `;
         }
+
+        // アイテムクリックでチェックボックスをトグルする機能
+        div.addEventListener('click', (e) => {
+            // チェックボックス自体やそのラベルをクリックした場合は、デフォルトの挙動に任せる（二重発火防止）
+            if (e.target.classList.contains('history-checkbox') || e.target.closest('label')) return;
+
+            const cb = div.querySelector('.history-checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                // 手動でchangeイベントを発火させてapp.js側のリスナーを動かす
+                cb.dispatchEvent(new Event('change'));
+            }
+        });
+
         return div;
     },
 

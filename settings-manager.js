@@ -63,5 +63,23 @@ const SettingsManager = {
     // 機種データのキャッシュ保存
     saveParametricMachines(data) {
         localStorage.setItem(STORAGE_KEY_MACHINES, JSON.stringify(data));
+    },
+
+    // 削除済みデータのバックアップ保存 (最大5アクション分)
+    saveDeletedBackup(items) {
+        if (!items || items.length === 0) {
+            localStorage.setItem('pachinkoDeletedBackup', '[]');
+            return;
+        }
+        let backup = JSON.parse(localStorage.getItem('pachinkoDeletedBackup') || '[]');
+        backup.unshift(items); // 最新の削除アクションを先頭に
+        if (backup.length > 5) backup = backup.slice(0, 5); // 5アクションまで
+        localStorage.setItem('pachinkoDeletedBackup', JSON.stringify(backup));
+    },
+
+    // 削除済みデータの読み込み (最新の1アクション分を復旧対象とする)
+    loadDeletedBackup() {
+        const backup = JSON.parse(localStorage.getItem('pachinkoDeletedBackup') || '[]');
+        return backup.length > 0 ? backup[0] : [];
     }
 };

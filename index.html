@@ -85,11 +85,58 @@
                         </div>
                     </div>
 
-                    <div class="grid-2col" style="grid-template-columns: 1fr;">
+                    <div class="grid-2col">
                         <div class="input-group">
-                            <label for="invest-cash">投資金額 (千円単位)</label>
-                            <input type="number" id="invest-cash" placeholder="例: 10 (10,000円), 5.5 (5,500円)" min="0"
-                                step="0.5">
+                            <label for="invest-cash">投資金額 (入力)</label>
+                            <input type="number" id="invest-cash" placeholder="例: 10" min="0" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label for="invest-cash-preset">投資金額 (プルダウン)</label>
+                            <div class="select-wrapper">
+                                <select id="invest-cash-preset">
+                                    <option value="0">0k</option>
+                                    <option value="0.5">0.5k</option>
+                                    <option value="1">1k</option>
+                                    <option value="1.5">1.5k</option>
+                                    <option value="2">2k</option>
+                                    <option value="2.5">2.5k</option>
+                                    <option value="3">3k</option>
+                                    <option value="3.5">3.5k</option>
+                                    <option value="4">4k</option>
+                                    <option value="4.5">4.5k</option>
+                                    <option value="5">5k</option>
+                                    <option value="5.5">5.5k</option>
+                                    <option value="6">6k</option>
+                                    <option value="6.5">6.5k</option>
+                                    <option value="7">7k</option>
+                                    <option value="7.5">7.5k</option>
+                                    <option value="8">8k</option>
+                                    <option value="8.5">8.5k</option>
+                                    <option value="9">9k</option>
+                                    <option value="9.5">9.5k</option>
+                                    <option value="10">10k</option>
+                                    <option value="10.5">10.5k</option>
+                                    <option value="11">11k</option>
+                                    <option value="11.5">11.5k</option>
+                                    <option value="12">12k</option>
+                                    <option value="12.5">12.5k</option>
+                                    <option value="13">13k</option>
+                                    <option value="13.5">13.5k</option>
+                                    <option value="14">14k</option>
+                                    <option value="14.5">14.5k</option>
+                                    <option value="15">15k</option>
+                                    <option value="15.5">15.5k</option>
+                                    <option value="16">16k</option>
+                                    <option value="16.5">16.5k</option>
+                                    <option value="17">17k</option>
+                                    <option value="17.5">17.5k</option>
+                                    <option value="18">18k</option>
+                                    <option value="18.5">18.5k</option>
+                                    <option value="19">19k</option>
+                                    <option value="19.5">19.5k</option>
+                                    <option value="20">20k</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -108,6 +155,10 @@
                         <div style="display: flex; justify-content: space-between;">
                             <span>実測回転率 (1000円あたり): </span>
                             <strong id="measured-turn-rate" class="highlight-value">-- 回転</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 0.25rem;">
+                            <span>総投資(k): </span>
+                            <strong id="measured-total-invest-k" class="highlight-value">0.000k</strong>
                         </div>
                         <div id="measured-turn-rate-4p-container"
                             style="display: none; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.5rem;">
@@ -137,7 +188,10 @@
                 </div>
 
                 <div class="card result-section">
-                    <h2>期待値計算結果</h2>
+                    <div class="result-header" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <h2 style="margin: 0;">期待値計算結果</h2>
+                        <span id="assumed-rb-label" style="font-size: 0.8rem; color: var(--accent); font-weight: normal;"></span>
+                    </div>
 
                     <div class="result-grid">
                         <div class="result-box ev" id="ev-box">
@@ -201,7 +255,10 @@
                 <div style="margin-bottom: 1rem;">
                     <div class="history-header">
                         <h2 style="margin-bottom: 0;">保存済み履歴</h2>
-                        <button type="button" id="force-reload-btn" class="btn-purple">更新</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" id="restore-history-btn" class="btn-gray" disabled title="最大5件まで復旧可能">復旧</button>
+                            <button type="button" id="force-reload-btn" class="btn-purple">更新</button>
+                        </div>
                     </div>
                     <div
                         style="display: flex; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap; margin-top: 0.75rem;">

@@ -13,9 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const startSpinInput = document.getElementById('start-spin');
     const currentSpinInput = document.getElementById('current-spin');
     const investCashInput = document.getElementById('invest-cash');
+    const investCashPreset = document.getElementById('invest-cash-preset');
     const startBallsInput = document.getElementById('start-balls');
     const currentBallsInput = document.getElementById('current-balls');
     const measuredTurnRateDisplay = document.getElementById('measured-turn-rate');
+    const measuredTotalInvestKDisplay = document.getElementById('measured-total-invest-k');
     const measuredTurnRate4pDisplay = document.getElementById('measured-turn-rate-4p');
     const bonusRoundsInput = document.getElementById('bonus-rounds');
     const afterBonusBallsInput = document.getElementById('after-bonus-balls');
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saveHistoryBtn = document.getElementById('save-history-btn');
     const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const restoreHistoryBtn = document.getElementById('restore-history-btn');
     const shareLineBtn = document.getElementById('share-line-btn');
     const historyList = document.getElementById('history-list');
     const summaryBox = document.getElementById('history-summary-container');
@@ -52,11 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const playRate = parseFloat(document.querySelector('input[name="play-rate"]:checked').value);
         const exchangeRateBalls = exchangeRateSelect.value === 'custom' ? parseFloat(customExchangeInput.value) : parseFloat(exchangeRateSelect.value);
 
+        const investCashK = (parseFloat(investCashInput.value) || 0) + (parseFloat(investCashPreset.value) || 0);
+
         const inputs = {
             playRate, exchangeRateBalls,
             startSpin: parseFloat(startSpinInput.value) || 0,
             currentSpin: parseFloat(currentSpinInput.value) || 0,
-            investCashK: parseFloat(investCashInput.value) || 0,
+            investCashK: investCashK,
             startBalls: parseFloat(startBallsInput.value) || 0,
             currentBalls: parseFloat(currentBallsInput.value) || 0,
             bonusRounds: parseFloat(bonusRoundsInput.value) || 0,
@@ -69,6 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // UI更新 (数値表示)
         // 貸玉レートが4円以外の場合、4円換算の回転率も表示する（ユーザーが比較しやすくするため）
         measuredTurnRateDisplay.textContent = res.totalInvestedYen > 0 ? `${res.turnRatePer1k.toFixed(2)} 回転` : '-- 回転';
+        if (measuredTotalInvestKDisplay) {
+            measuredTotalInvestKDisplay.textContent = `${(res.totalInvestedYen / 1000).toFixed(3)}k`;
+        }
         if (measuredTurnRate4pDisplay) {
             const container4p = document.getElementById('measured-turn-rate-4p-container');
             if (playRate === 4) {
@@ -103,6 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
         valuePerSpinDisplay.previousElementSibling.textContent = labels.unit;
         ballEvPerSpinDisplay.previousElementSibling.textContent = labels.ball;
         cashEvPerSpinDisplay.previousElementSibling.textContent = labels.cash;
+
+        // 仮定RB表示の更新
+        const assumedRbLabel = document.getElementById('assumed-rb-label');
+        if (assumedRbLabel) {
+            if (inputs.bonusRounds > 0 && inputs.afterBonusBalls > 0) {
+                assumedRbLabel.textContent = '';
+            } else {
+                assumedRbLabel.textContent = `(仮定RB${res.activeBorderBase > 0 ? Math.round(machine.rb) : '---'})`;
+            }
+        }
 
         if (res.isYutimeApplied) {
             yutimeEvRow.style.display = 'flex';
@@ -269,11 +287,44 @@ document.addEventListener('DOMContentLoaded', () => {
     deleteSelectedBtn?.addEventListener('click', () => {
         const selected = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => parseInt(cb.getAttribute('data-id')));
         if (selected.length > 0 && confirm('削除しますか？')) {
+            const deletedItems = historyData.filter(item => selected.includes(item.id));
+            SettingsManager.saveDeletedBackup(deletedItems); // バックアップ保存
             historyData = historyData.filter(item => !selected.includes(item.id));
             SettingsManager.saveHistory(historyData);
+            updateRestoreBtnState();
             renderHistory();
         }
     });
+
+    restoreHistoryBtn?.addEventListener('click', () => {
+        const backup = SettingsManager.loadDeletedBackup();
+        if (backup && backup.length > 0) {
+            // 重複排除してマージ
+            const existingIds = historyData.map(h => h.id);
+            const toRestore = backup.filter(item => !existingIds.includes(item.id));
+            historyData = [...toRestore, ...historyData];
+            // 保存日時（ID）で降順ソート
+            historyData.sort((a, b) => b.id - a.id);
+            SettingsManager.saveHistory(historyData);
+            SettingsManager.saveDeletedBackup([]); // 復旧後はバックアップをクリア
+            updateRestoreBtnState();
+            renderHistory();
+            alert('データを復旧しました。');
+        }
+    });
+
+    function updateRestoreBtnState() {
+        if (!restoreHistoryBtn) return;
+        const backup = SettingsManager.loadDeletedBackup();
+        const hasBackup = backup && backup.length > 0;
+        restoreHistoryBtn.disabled = !hasBackup;
+        restoreHistoryBtn.className = hasBackup ? 'btn-gray-active' : 'btn-gray';
+        if (hasBackup) {
+            restoreHistoryBtn.removeAttribute('disabled');
+        } else {
+            restoreHistoryBtn.setAttribute('disabled', 'true');
+        }
+    }
 
     document.getElementById('select-all-btn')?.addEventListener('click', () => {
         const cbs = document.querySelectorAll('.history-checkbox');
@@ -356,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadSettings();
+    updateRestoreBtnState();
     renderHistory();
     calculateEV();
 });
