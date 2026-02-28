@@ -1,4 +1,4 @@
-// [v79.2] 2026-02-28 - スプレッドシート対応ドキュメント作成とGitHub連携の強化
+// [v80] 2026-03-01 - UIレイアウトを以前のstyles.cssに復旧し、JSリファクタリングを維持
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
