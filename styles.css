@@ -736,12 +736,14 @@ footer {
 .input-with-clear input::-webkit-outer-spin-button,
 .input-with-clear input::-webkit-inner-spin-button {
     -webkit-appearance: none;
+    appearance: none;
     margin: 0;
 }
 
 /* Firefox のスピンボタンを非表示にする */
 .input-with-clear input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .clear-btn {
@@ -770,4 +772,44 @@ footer {
 .clear-btn:hover {
     background: rgba(255, 255, 255, 0.2);
     color: var(--text-main);
+}
+
+/* v79 追加: 投資2連プルダウン・初期化ボタン */
+.select-twin {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    /* 改行を防止 */
+}
+
+.select-twin .select-wrapper {
+    flex: 1;
+    min-width: 0;
+    /* フレキシブルに縮小可能に */
+}
+
+.select-twin .dot {
+    color: var(--text-muted);
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.btn-tiny {
+    background: rgba(148, 163, 184, 0.2);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    margin: 0 0.5rem;
+    flex-shrink: 0;
+}
+
+.btn-tiny:hover {
+    background: rgba(148, 163, 184, 0.3);
+    border-color: var(--text-muted);
 }
