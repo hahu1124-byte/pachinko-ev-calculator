@@ -1,4 +1,4 @@
-// [v80] 2026-03-01 - UIレイアウトを以前のstyles.cssに復旧し、JSリファクタリングを維持
+// [v82] 2026-03-01 - 【緊急復旧】CSS分割失敗によるレイアウト崩れを修正、styles.css 1本に完全差し戻し
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
