@@ -88,53 +88,56 @@
                     <div class="grid-2col">
                         <div class="input-group">
                             <label for="invest-cash">投資金額 (入力)</label>
-                            <input type="number" id="invest-cash" placeholder="例: 10" min="0" step="0.5">
+                            <div class="input-with-clear">
+                                <input type="number" id="invest-cash" placeholder="例: 10" min="0" step="0.5">
+                                <button type="button" class="clear-btn" data-target="invest-cash">×</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label for="invest-cash-preset">投資金額 (プルダウン)</label>
                             <div class="select-wrapper">
                                 <select id="invest-cash-preset">
-                                    <option value="0">0k</option>
-                                    <option value="0.5">0.5k</option>
-                                    <option value="1">1k</option>
-                                    <option value="1.5">1.5k</option>
-                                    <option value="2">2k</option>
-                                    <option value="2.5">2.5k</option>
-                                    <option value="3">3k</option>
-                                    <option value="3.5">3.5k</option>
-                                    <option value="4">4k</option>
-                                    <option value="4.5">4.5k</option>
-                                    <option value="5">5k</option>
-                                    <option value="5.5">5.5k</option>
-                                    <option value="6">6k</option>
-                                    <option value="6.5">6.5k</option>
-                                    <option value="7">7k</option>
-                                    <option value="7.5">7.5k</option>
-                                    <option value="8">8k</option>
-                                    <option value="8.5">8.5k</option>
-                                    <option value="9">9k</option>
-                                    <option value="9.5">9.5k</option>
-                                    <option value="10">10k</option>
-                                    <option value="10.5">10.5k</option>
-                                    <option value="11">11k</option>
-                                    <option value="11.5">11.5k</option>
-                                    <option value="12">12k</option>
-                                    <option value="12.5">12.5k</option>
-                                    <option value="13">13k</option>
-                                    <option value="13.5">13.5k</option>
-                                    <option value="14">14k</option>
-                                    <option value="14.5">14.5k</option>
-                                    <option value="15">15k</option>
-                                    <option value="15.5">15.5k</option>
-                                    <option value="16">16k</option>
-                                    <option value="16.5">16.5k</option>
-                                    <option value="17">17k</option>
-                                    <option value="17.5">17.5k</option>
-                                    <option value="18">18k</option>
-                                    <option value="18.5">18.5k</option>
-                                    <option value="19">19k</option>
-                                    <option value="19.5">19.5k</option>
-                                    <option value="20">20k</option>
+                                    <option value="0">0</option>
+                                    <option value="0.5">0.5</option>
+                                    <option value="1">1</option>
+                                    <option value="1.5">1.5</option>
+                                    <option value="2">2</option>
+                                    <option value="2.5">2.5</option>
+                                    <option value="3">3</option>
+                                    <option value="3.5">3.5</option>
+                                    <option value="4">4</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="5">5</option>
+                                    <option value="5.5">5.5</option>
+                                    <option value="6">6</option>
+                                    <option value="6.5">6.5</option>
+                                    <option value="7">7</option>
+                                    <option value="7.5">7.5</option>
+                                    <option value="8">8</option>
+                                    <option value="8.5">8.5</option>
+                                    <option value="9">9</option>
+                                    <option value="9.5">9.5</option>
+                                    <option value="10">10</option>
+                                    <option value="10.5">10.5</option>
+                                    <option value="11">11</option>
+                                    <option value="11.5">11.5</option>
+                                    <option value="12">12</option>
+                                    <option value="12.5">12.5</option>
+                                    <option value="13">13</option>
+                                    <option value="13.5">13.5</option>
+                                    <option value="14">14</option>
+                                    <option value="14.5">14.5</option>
+                                    <option value="15">15</option>
+                                    <option value="15.5">15.5</option>
+                                    <option value="16">16</option>
+                                    <option value="16.5">16.5</option>
+                                    <option value="17">17</option>
+                                    <option value="17.5">17.5</option>
+                                    <option value="18">18</option>
+                                    <option value="18.5">18.5</option>
+                                    <option value="19">19</option>
+                                    <option value="19.5">19.5</option>
+                                    <option value="20">20</option>
                                 </select>
                             </div>
                         </div>
@@ -142,12 +145,18 @@
 
                     <div class="grid-2col">
                         <div class="input-group">
-                            <label for="start-balls">打ち始め玉数 (玉)</label>
-                            <input type="number" id="start-balls" placeholder="例: 2500" min="0" step="125">
+                            <label for="start-balls">打ち始め玉数 (玉)<span id="prev-last-balls-display"></span></label>
+                            <div class="input-with-clear">
+                                <input type="number" id="start-balls" placeholder="例: 2500" min="0" step="125">
+                                <button type="button" class="clear-btn" data-target="start-balls">×</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label for="current-balls">現在の玉数 (玉)</label>
-                            <input type="number" id="current-balls" placeholder="例: 0" min="0" step="125">
+                            <div class="input-with-clear">
+                                <input type="number" id="current-balls" placeholder="例: 0" min="0" step="125">
+                                <button type="button" class="clear-btn" data-target="current-balls">×</button>
+                            </div>
                         </div>
                     </div>
 
@@ -156,7 +165,8 @@
                             <span>実測回転率 (1000円あたり): </span>
                             <strong id="measured-turn-rate" class="highlight-value">-- 回転</strong>
                         </div>
-                        <div style="display: flex; justify-content: space-between; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 0.25rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; border-top: 1px dotted rgba(255,255,255,0.1); padding-top: 0.25rem;">
                             <span>総投資(k): </span>
                             <strong id="measured-total-invest-k" class="highlight-value">0.000k</strong>
                         </div>
@@ -173,11 +183,17 @@
                     <div class="grid-2col">
                         <div class="input-group">
                             <label for="bonus-rounds">大当たりの獲得R数 (R)</label>
-                            <input type="number" id="bonus-rounds" placeholder="例: 10" min="0" step="1">
+                            <div class="input-with-clear">
+                                <input type="number" id="bonus-rounds" placeholder="例: 10" min="0" step="1">
+                                <button type="button" class="clear-btn" data-target="bonus-rounds">×</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label for="after-bonus-balls">当たり後の玉数 (玉)</label>
-                            <input type="number" id="after-bonus-balls" placeholder="例: 1400" min="0" step="1">
+                            <div class="input-with-clear">
+                                <input type="number" id="after-bonus-balls" placeholder="例: 1400" min="0" step="1">
+                                <button type="button" class="clear-btn" data-target="after-bonus-balls">×</button>
+                            </div>
                         </div>
                     </div>
 
@@ -185,12 +201,27 @@
                         <span>実測1R平均出玉 (自動反映): </span>
                         <strong id="measured-rb" class="highlight-value">-- 玉</strong>
                     </div>
+
+                    <div class="calculated-rate"
+                        style="flex-direction: column; align-items: stretch; gap: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>仮定RB: <strong id="assumed-rb-display" style="color: var(--accent);">--</strong></span>
+                            <div style="display: flex; gap: 0.25rem;">
+                                <div class="select-wrapper" style="width: 70px;">
+                                    <select id="assumed-rb-int"></select>
+                                </div>
+                                <span style="align-self: center;">.</span>
+                                <div class="select-wrapper" style="width: 60px;">
+                                    <select id="assumed-rb-dec"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card result-section">
                     <div class="result-header" style="display: flex; align-items: center; gap: 0.5rem;">
                         <h2 style="margin: 0;">期待値計算結果</h2>
-                        <span id="assumed-rb-label" style="font-size: 0.8rem; color: var(--accent); font-weight: normal;"></span>
                     </div>
 
                     <div class="result-grid">
@@ -256,7 +287,8 @@
                     <div class="history-header">
                         <h2 style="margin-bottom: 0;">保存済み履歴</h2>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button type="button" id="restore-history-btn" class="btn-gray" disabled title="最大5件まで復旧可能">復旧</button>
+                            <button type="button" id="restore-history-btn" class="btn-gray" disabled
+                                title="最大5件まで復旧可能">復旧</button>
                             <button type="button" id="force-reload-btn" class="btn-purple">更新</button>
                         </div>
                     </div>

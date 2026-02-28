@@ -11,7 +11,8 @@
 function calculatePachinkoEV(inputs, machine) {
     const {
         playRate, exchangeRateBalls, startSpin, currentSpin,
-        investCashK, startBalls, currentBalls, bonusRounds, afterBonusBalls
+        investCashK, startBalls, currentBalls, bonusRounds, afterBonusBalls,
+        customAssumedRb
     } = inputs;
 
     const ballsPer1k = 1000 / playRate;
@@ -20,7 +21,7 @@ function calculatePachinkoEV(inputs, machine) {
     const borderBase = machine ? machine.border : 0;
     const prob = machine ? machine.prob : 0;
     const primaryProb = machine ? machine.primaryProb : 0;
-    const defaultRb = machine ? machine.rb : 0;
+    const defaultRb = customAssumedRb > 0 ? customAssumedRb : (machine ? machine.rb : 0);
     const machineYutimeLimit = machine ? (machine.yutimeSpins || 0) : 0;
     const machineAvgChain = machine ? (machine.avgChain || 0) : 0;
     const machineYutimeSpinCount = machine ? (machine.yutimeSpinCount || 0) : 0;

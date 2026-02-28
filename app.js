@@ -23,6 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const afterBonusBallsInput = document.getElementById('after-bonus-balls');
     const measuredRbDisplay = document.getElementById('measured-rb');
 
+    // v78 追加要素
+    const assumedRbIntSelect = document.getElementById('assumed-rb-int');
+    const assumedRbDecSelect = document.getElementById('assumed-rb-dec');
+    const assumedRbDisplay = document.getElementById('assumed-rb-display');
+    const prevLastBallsDisplay = document.getElementById('prev-last-balls-display');
+
+    // 仮定RBプルダウンの生成 (0-200, 0-99)
+    for (let i = 0; i <= 200; i++) {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = i;
+        assumedRbIntSelect.appendChild(opt);
+    }
+    for (let i = 0; i <= 99; i++) {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = i.toString().padStart(2, '0');
+        assumedRbDecSelect.appendChild(opt);
+    }
+
     const evDailyDisplay = document.getElementById('expected-value-daily');
     const totalSpinsDisplay = document.getElementById('total-spins');
     const valuePerSpinDisplay = document.getElementById('value-per-spin');
@@ -57,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const investCashK = (parseFloat(investCashInput.value) || 0) + (parseFloat(investCashPreset.value) || 0);
 
+        const customAssumedRb = parseFloat(assumedRbIntSelect.value) + (parseFloat(assumedRbDecSelect.value) / 100);
+
         const inputs = {
             playRate, exchangeRateBalls,
             startSpin: parseFloat(startSpinInput.value) || 0,
@@ -65,7 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             startBalls: parseFloat(startBallsInput.value) || 0,
             currentBalls: parseFloat(currentBallsInput.value) || 0,
             bonusRounds: parseFloat(bonusRoundsInput.value) || 0,
-            afterBonusBalls: parseFloat(afterBonusBallsInput.value) || 0
+            afterBonusBalls: parseFloat(afterBonusBallsInput.value) || 0,
+            customAssumedRb: customAssumedRb
         };
 
         const machine = machineData[machineSelect.value];
@@ -112,15 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ballEvPerSpinDisplay.previousElementSibling.textContent = labels.ball;
         cashEvPerSpinDisplay.previousElementSibling.textContent = labels.cash;
 
-        // 仮定RB表示の更新
-        const assumedRbLabel = document.getElementById('assumed-rb-label');
-        if (assumedRbLabel) {
-            if (inputs.bonusRounds > 0 && inputs.afterBonusBalls > 0) {
-                assumedRbLabel.textContent = '';
-            } else {
-                assumedRbLabel.textContent = `(仮定RB${res.activeBorderBase > 0 ? Math.round(machine.rb) : '---'})`;
-            }
-        }
+        // 仮定RB表示の更新 (v78)
+        assumedRbDisplay.textContent = customAssumedRb.toFixed(2);
 
         if (res.isYutimeApplied) {
             yutimeEvRow.style.display = 'flex';
@@ -222,6 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (machineData.length > 0) {
             machineSelect.value = 0;
         }
+
+        // 機種選択時に仮定RBプルダウンを初期値にセット
+        const machine = machineData[machineSelect.value];
+        if (machine) {
+            const val = machine.rb || 0;
+            assumedRbIntSelect.value = Math.floor(val);
+            assumedRbDecSelect.value = Math.round((val % 1) * 100);
+            assumedRbDisplay.textContent = val.toFixed(2);
+        }
+
         calculateEV();
     }
 
@@ -274,10 +298,38 @@ document.addEventListener('DOMContentLoaded', () => {
         populateMachineSelect();
     });
     playRateRadios.forEach(r => r.addEventListener('change', populateMachineSelect));
-    machineSelect.addEventListener('change', calculateEV);
+    machineSelect.addEventListener('change', () => {
+        // 機種変更時に仮定RBをリセット
+        const machine = machineData[machineSelect.value];
+        if (machine) {
+            const val = machine.rb || 0;
+            assumedRbIntSelect.value = Math.floor(val);
+            assumedRbDecSelect.value = Math.round((val % 1) * 100);
+            assumedRbDisplay.textContent = val.toFixed(2);
+        }
+        calculateEV();
+    });
+
+    // 入力クリアボタンのイベント
+    document.querySelectorAll('.clear-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            if (targetInput) {
+                targetInput.value = '';
+                calculateEV();
+            }
+        });
+    });
 
     saveHistoryBtn?.addEventListener('click', () => {
         if (!latestCalculation) return alert('計算してから保存してください。');
+
+        // 前回最終玉数の表示更新 (v78)
+        if (afterBonusBallsInput.value) {
+            prevLastBallsDisplay.textContent = `：前回最終玉 ${afterBonusBallsInput.value}`;
+        }
+
         historyData.unshift(latestCalculation);
         SettingsManager.saveHistory(historyData);
         renderHistory();
