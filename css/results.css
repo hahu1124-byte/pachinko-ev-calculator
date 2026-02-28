@@ -1,0 +1,49 @@
+/* Results */
+.result-section {
+    background: linear-gradient(135deg, #1E293B, #0F172A);
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.result-box {
+    padding: 1.25rem;
+    border-radius: 8px;
+    text-align: center;
+    background-color: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border);
+}
+
+.result-box h3 {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.calculated-rate {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border);
+}
+
+.highlight-value {
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
+.result-box.ev {
+    border-color: rgba(234, 179, 8, 0.5);
+}
+
+.result-box.ev h3 {
+    color: var(--accent);
+}

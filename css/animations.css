@@ -1,0 +1,91 @@
+@keyframes summary-pulse-green {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    }
+}
+
+@keyframes summary-pulse-blue {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+    }
+}
+
+@keyframes summary-pulse-bluegold {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 35px rgba(251, 191, 36, 0.5);
+    }
+}
+
+@keyframes summary-pulse-gold {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.7);
+    }
+}
+
+@keyframes bounce {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+}
+
+@keyframes ev-pulse {
+    0% {
+        box-shadow: 0 0 5px rgba(34, 197, 94, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(34, 197, 94, 0.2);
+    }
+}
+
+/* Chrome, Safari, Edge, Opera のスピンボタンを非表示にする */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+/* Firefox のスピンボタンを非表示にする */
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}

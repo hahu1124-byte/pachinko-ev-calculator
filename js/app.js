@@ -1,4 +1,4 @@
-// [v82] 2026-03-01 - 【緊急復旧】CSS分割失敗によるレイアウト崩れを修正、styles.css 1本に完全差し戻し
+// [v83] 2026-03-01 - 精密なCSS分割の再実施（レイアウト完全維持、CLI手法採用）
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
