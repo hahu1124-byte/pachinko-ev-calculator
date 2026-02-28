@@ -48,20 +48,26 @@ function calculatePachinkoEV(inputs, machine) {
     }
     const realBorder = activeBorderBase * (playRate / valuePerBallCashout);
 
-    // 通常時の計算
+    // 通常時の期待値計算
     const rb = measuredRb > 0 ? measuredRb : defaultRb;
     const exchangeRateYen = valuePerBallCashout * (4 / playRate);
     const conversionFactor = 4 / exchangeRateYen;
 
-    const j14Result = prob > 0 && turnRatePer1k > 0
+    // 1回転あたりの期待値計算 (玉単価ベース) - [スプレッドシート J14 相当]
+    // 式: ((1R出玉 / 大当たり確率) - (1kあたりの玉数 / 回転率)) * 4円 / (1kあたりの玉数 / 250玉)
+    const normalEVPerSpinRaw = prob > 0 && turnRatePer1k > 0
         ? (((rb / prob) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)
         : 0;
 
-    const normalBallUnitPrice = j14Result >= 0 ? (j14Result / conversionFactor) : (j14Result * conversionFactor);
+    const normalBallUnitPrice = normalEVPerSpinRaw >= 0 ? (normalEVPerSpinRaw / conversionFactor) : (normalEVPerSpinRaw * conversionFactor);
+
+    // 現金投資時の1回転あたり期待値
     const normalCashUnitPrice = prob > 0 && turnRatePer1k > 0
         ? ((rb * valuePerBallCashout / prob) - (1000 / turnRatePer1k)) * (250 / ballsPer1k)
         : 0;
-    const normalValuePerSpin = (Math.min(j14Result, normalBallUnitPrice) * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
+
+    // 持ち玉比率を考慮した1回転あたり期待値
+    const normalValuePerSpin = (Math.min(normalEVPerSpinRaw, normalBallUnitPrice) * ballRatio) + (normalCashUnitPrice * (1 - ballRatio));
     const dailyEV = normalValuePerSpin * totalSpinsMeasured;
 
     // 遊タイム期待値の計算
@@ -72,28 +78,32 @@ function calculatePachinkoEV(inputs, machine) {
     const hasYutime = machineYutimeLimit > 0 && primaryProb > 0;
 
     if (hasYutime) {
+        // 遊タイム到達までの残り回転数に応じた期待確率等の計算 - [スプレッドシート I17 相当]
         const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - startSpin);
         const yutimeSpinCountForCalc = machineYutimeSpinCount > 0 ? machineYutimeSpinCount : yutimeSpinsRemaining;
-        const yutimeExpectancy = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinCountForCalc);
+        const yutimeSuccessProb = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinCountForCalc);
 
         const missProb = (primaryProb - 1) / primaryProb;
         const effectiveProb = primaryProb * (1 - Math.pow(missProb, Math.max(0, yutimeSpinsRemaining)));
 
+        // 遊タイム中を含めた実質的な大当たり確率の調整
         const yutimeTotalProb = machineAvgChain > 0 && effectiveProb > 0 ? effectiveProb / (machineAvgChain * 10) : prob;
 
-        const rawI18 = yutimeTotalProb > 0 && turnRatePer1k > 0
-            ? (((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)) * yutimeExpectancy)
+        // 遊タイム考慮時の持ち玉単価計算 - [スプレッドシート I18 相当]
+        const yutimeBallUnitPriceRaw = yutimeTotalProb > 0 && turnRatePer1k > 0
+            ? (((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)) * yutimeSuccessProb)
             : 0;
-        yutimeBallUnitPriceResult = rawI18 >= 0 ? (rawI18 / conversionFactor) : (rawI18 * conversionFactor);
+        yutimeBallUnitPriceResult = yutimeBallUnitPriceRaw >= 0 ? (yutimeBallUnitPriceRaw / conversionFactor) : (yutimeBallUnitPriceRaw * conversionFactor);
 
-        const rawI19Base = yutimeTotalProb > 0 && turnRatePer1k > 0
+        // 遊タイム考慮時の現金単価計算 - [スプレッドシート I19 相当]
+        const yutimeCashUnitPriceRawBase = yutimeTotalProb > 0 && turnRatePer1k > 0
             ? (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k))
             : 0;
-        const yutimeExpectancySq = Math.pow(yutimeExpectancy, 2);
-        const rawI19 = rawI19Base <= 0
-            ? (yutimeExpectancySq > 0 ? rawI19Base / yutimeExpectancySq : rawI19Base)
-            : rawI19Base * yutimeExpectancySq;
-        yutimeCashUnitPriceResult = rawI19 >= 0 ? (rawI19 / conversionFactor) : (rawI19 * conversionFactor);
+        const yutimeSuccessProbSq = Math.pow(yutimeSuccessProb, 2);
+        const yutimeCashUnitPriceRaw = yutimeCashUnitPriceRawBase <= 0
+            ? (yutimeSuccessProbSq > 0 ? yutimeCashUnitPriceRawBase / yutimeSuccessProbSq : yutimeCashUnitPriceRawBase)
+            : yutimeCashUnitPriceRawBase * yutimeSuccessProbSq;
+        yutimeCashUnitPriceResult = yutimeCashUnitPriceRaw >= 0 ? (yutimeCashUnitPriceRaw / conversionFactor) : (yutimeCashUnitPriceRaw * conversionFactor);
 
         yutimeValuePerSpin = (yutimeBallUnitPriceResult * ballRatio) + (yutimeCashUnitPriceResult * (1 - ballRatio));
         yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;

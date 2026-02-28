@@ -1,4 +1,4 @@
-// [v79.1] 2026-02-28 - コードのブラッシュアップとファイル分割（リファクタリング）
+// [v79.2] 2026-02-28 - スプレッドシート対応ドキュメント作成とGitHub連携の強化
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
@@ -263,22 +263,43 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateEV();
     }
 
-    // --- 4. イベントリスナー統合 ---
+    // --- 4. イベントリスナー設定 ---
 
     function setupEventListeners() {
-        const inputs_all = document.querySelectorAll('input[type="number"], input[type="radio"], select');
-        inputs_all.forEach(el => {
-            el.addEventListener('input', calculateEV);
-            el.addEventListener('change', calculateEV);
+        // 入力変更時の自動計算
+        const autoCalcInputs = [
+            ...ui.playRateRadios,
+            ui.exchangeRateSelect,
+            ui.customExchangeInput,
+            ui.machineSelect,
+            ui.startSpinInput,
+            ui.currentSpinInput,
+            ui.investCashInput,
+            ui.investCashPresetInt,
+            ui.investCashPresetDec,
+            ui.startBallsInput,
+            ui.currentBallsInput,
+            ui.bonusRoundsInput,
+            ui.afterBonusBallsInput,
+            ui.assumedRbIntSelect,
+            ui.assumedRbDecSelect
+        ];
+
+        autoCalcInputs.forEach(el => {
+            const eventType = el.tagName === 'SELECT' || el.type === 'radio' ? 'change' : 'input';
+            el.addEventListener(eventType, calculateEV);
         });
 
+        // 交換率の「その他」入力切り替え
         ui.exchangeRateSelect.addEventListener('change', (e) => {
             ui.customExchangeInput.classList.toggle('hidden', e.target.value !== 'custom');
             populateMachineSelect();
         });
 
+        // レート変更時の機種リスト更新
         ui.playRateRadios.forEach(r => r.addEventListener('change', populateMachineSelect));
 
+        // 機種選択時のデフォルトRB反映
         ui.machineSelect.addEventListener('change', () => {
             const machine = DataManager.getMachineByIndex(ui.machineSelect.value);
             if (machine) {
@@ -290,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateEV();
         });
 
+        // 仮定RB初期化ボタン
         ui.resetAssumedRbBtn?.addEventListener('click', () => {
             const machine = DataManager.getMachineByIndex(ui.machineSelect.value);
             if (machine) {

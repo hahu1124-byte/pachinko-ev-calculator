@@ -88,76 +88,94 @@ const UIManager = {
         const mName = item.machineName || "不明";
         const invK = (item.totalInvestedK || 0).toFixed(3);
         const spins = item.totalSpinsMeasured || 0;
+
+        // 回転率の表示形式
         let turn = (item.turnRate || 0).toFixed(2);
         if (item.playRate && item.playRate != 4) {
-            turn = `${turn}(${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
+            const turn4p = (item.turnRate / (4 / item.playRate)).toFixed(2);
+            turn = `${turn}(${turn4p})`;
         }
 
         const dateMeta = showDate ? formatHistoryDate(item.id) : '';
+        const playRateText = (item.playRate && item.playRate != 4) ? ` (${item.playRate}円)` : "";
 
-        // ==========================================
-        // 【詳細モード】isCompact=true / ボタン表示「簡略」
-        //  → compact表示（全データ1行詰め込み）
-        //  → 機種名の色: 白 (--text-main)
-        // ==========================================
         if (isCompact) {
+            // 【詳細モード】 (全データ1行詰め込み)
             const cshK = (item.cashInvestedK || 0).toFixed(2);
-            const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '';
-            const br = item.bonusRounds || '';
-            const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '';
+            const rb = item.measuredRb ? item.measuredRb.toFixed(1) : '0';
+            const br = item.bonusRounds || '0';
+            const acq = item.acquiredBalls ? Math.round(item.acquiredBalls) : '0';
             const diff = (item.diffBalls || 0).toLocaleString();
             const ballEv = (item.valuePerSpin || 0).toFixed(1);
             const work = formatCurrency(Math.round(item.dailyEV || 0));
             const bRat = ((item.ballRatio || 0) * 100).toFixed(1);
-            const rateSuffix = (item.playRate && item.playRate != 4) ? `/${item.playRate}円` : "";
 
-            const dateTime = showDate ? `<span class="compact-date">${dateMeta}</span>` : '';
-            const rateText = (item.playRate && item.playRate != 4) ? ` (${item.playRate}円)` : "";
-            const headerRow = `<div class="compact-header">${dateTime}<span class="compact-machine">${mName}${rateText}</span><input type="checkbox" class="history-checkbox history-checkbox-inline" data-id="${item.id}"></div>`;
-            const statsText = `総投資/${invK}k/通常回転数/${spins}/回転率${turn}/使用現金${cshK}k/RB${rb}/R回数${br}/獲得${acq}/差玉${diff}/単(持)${ballEv}/期待値${work}/持比${bRat}%`;
+            const dateTimeHtml = showDate ? `<span class="compact-date">${dateMeta}</span>` : '';
+
+            const statsText = [
+                `総投資/${invK}k`,
+                `通常/${spins}`,
+                `回転率${turn}`,
+                `現金${cshK}k`,
+                `RB${rb}`,
+                `R数${br}`,
+                `獲得${acq}`,
+                `差玉${diff}`,
+                `単(持)${ballEv}`,
+                `期待値${work}`,
+                `持比${bRat}%`
+            ].join('/');
 
             div.innerHTML = `
                 <div class="history-item-compact-container">
-                    ${headerRow}
+                    <div class="compact-header">
+                        ${dateTimeHtml}
+                        <span class="compact-machine">${mName}${playRateText}</span>
+                        <input type="checkbox" class="history-checkbox history-checkbox-inline" data-id="${item.id}">
+                    </div>
                     <div class="compact-stats">${statsText}</div>
                 </div>
             `;
-            // ==========================================
-            // 【簡略モード】isCompact=false / ボタン表示「詳細」
-            //  → 展開表示（回転率/持比/期待値の3項目）
-            //  → 機種名の色: 紫 (--primary)
-            // ==========================================
         } else {
+            // 【簡略モード】 (展開表示: 回転率/持比/期待値)
             let turnDisplayText = `${(item.turnRate || 0).toFixed(2)} / 1k`;
             if (item.playRate && item.playRate != 4) {
                 turnDisplayText += ` (4P換算: ${(item.turnRate / (4 / item.playRate)).toFixed(2)})`;
             }
+
+            const evAmount = Math.round(item.dailyEV || 0);
+            const evClass = evAmount >= 0 ? 'positive' : 'negative';
+            const yutimeLabel = item.hasYutime ? '(遊込)' : '';
+
             div.innerHTML = `
                 <div class="history-item-header">
                     <div class="header-left">
                         ${showDate ? `<div class="history-date-label">${dateMeta}</div>` : ''}
-                        <h4 class="history-machine-title">${mName} <span class="play-rate-label">(${item.playRate || "?"}円)</span></h4>
+                        <h4 class="history-machine-title">${mName} <span class="play-rate-label">${playRateText}</span></h4>
                     </div>
                     <input type="checkbox" class="history-checkbox history-checkbox-inline" data-id="${item.id}">
                 </div>
                 <div class="history-item-body">
                     <p><span>回転率:</span> <span>${turnDisplayText} (${spins}回転)</span></p>
                     <p><span>持比単価:</span> <span>${formatSpinValue(item.valuePerSpin || item.ballEv || 0)}</span></p>
-                    <p class="history-ev"><span>期待値${item.hasYutime ? '(遊込)' : ''}:</span> <span class="${(item.dailyEV || 0) >= 0 ? 'amount positive' : 'amount negative'}" style="font-size:1.1rem; text-shadow:none;">${formatCurrency(Math.round(item.dailyEV || 0))}</span></p>
+                    <p class="history-ev">
+                        <span>期待値${yutimeLabel}:</span> 
+                        <span class="amount ${evClass}" style="font-size:1.1rem; text-shadow:none;">
+                            ${formatCurrency(evAmount)}
+                        </span>
+                    </p>
                 </div>
             `;
         }
 
-        // アイテムクリックでチェックボックスをトグルする機能
+        // アイテム全体のクリックでチェックボックスをトグル
         div.addEventListener('click', (e) => {
-            // チェックボックス自体やそのラベルをクリックした場合は、デフォルトの挙動に任せる（二重発火防止）
             if (e.target.classList.contains('history-checkbox') || e.target.closest('label')) return;
 
             const cb = div.querySelector('.history-checkbox');
             if (cb) {
                 cb.checked = !cb.checked;
-                // 手動でchangeイベントを発火させてapp.js側のリスナーを動かす
-                cb.dispatchEvent(new Event('change'));
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
 
