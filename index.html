@@ -77,11 +77,17 @@
                     <div class="grid-2col">
                         <div class="input-group">
                             <label for="start-spin">打ち始め (回転)</label>
-                            <input type="number" id="start-spin" placeholder="例: 0" min="0">
+                            <div class="input-with-clear">
+                                <input type="number" id="start-spin" placeholder="例: 0" min="0">
+                                <button type="button" class="clear-btn" data-target="start-spin">×</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label for="current-spin">現在の回転数</label>
-                            <input type="number" id="current-spin" placeholder="例: 100" min="0">
+                            <div class="input-with-clear">
+                                <input type="number" id="current-spin" placeholder="例: 100" min="0">
+                                <button type="button" class="clear-btn" data-target="current-spin">×</button>
+                            </div>
                         </div>
                     </div>
 

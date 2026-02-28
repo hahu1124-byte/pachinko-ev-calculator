@@ -109,6 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         measuredRbDisplay.textContent = res.measuredRb > 0 ? `${res.measuredRb.toFixed(2)} 玉` : '-- 玉';
 
+        // 仮定RB表示の更新 (v78.1: 即時反映のため上部に移動)
+        assumedRbDisplay.textContent = customAssumedRb.toFixed(2);
+
         if (res.activeBorderBase <= 0 || isNaN(res.activeBorderBase) || res.turnRatePer1k <= 0 || res.totalSpinsMeasured <= 0) {
             evDailyDisplay.textContent = '￥0';
             totalSpinsDisplay.textContent = '0 回転';
@@ -133,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ballEvPerSpinDisplay.previousElementSibling.textContent = labels.ball;
         cashEvPerSpinDisplay.previousElementSibling.textContent = labels.cash;
 
-        // 仮定RB表示の更新 (v78)
-        assumedRbDisplay.textContent = customAssumedRb.toFixed(2);
+        // ラベル・バッジ更新
 
         if (res.isYutimeApplied) {
             yutimeEvRow.style.display = 'flex';
