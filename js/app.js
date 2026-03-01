@@ -1,4 +1,4 @@
-// [v83] 2026-03-01 - 精密なCSS分割の再実施（レイアウト完全維持、CLI手法採用）
+// [v85] 2026-03-01 - (Staging) 保存済み履歴セクションに共有に関する補足文言を追加
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.log('[GLOBAL ERROR]', msg, 'at line:', lineNo, 'col:', columnNo);
     return false;
