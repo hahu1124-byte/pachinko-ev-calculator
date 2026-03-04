@@ -1,13 +1,9 @@
 /**
- * 期待値計算コアエンジン
+ * パチンコ期待値計算コアエンジン
+ * gravity-portal/src/lib/ev-engine.ts と同一ロジック
+ * 最終同期: 2026-03-04
  */
 
-/**
- * Pachinko期待値計算メイン
- * @param {Object} inputs 入力データ (playRate, exchangeRateBalls, startSpin, currentSpin, investCashK, startBalls, currentBalls, bonusRounds, afterBonusBalls)
- * @param {Object} machine 機種データ (prob, primaryProb, border, rb, yutimeSpins, yutimeRb, avgChain, yutimeSpinCount)
- * @returns {Object} 計算結果
- */
 function calculatePachinkoEV(inputs, machine) {
     const {
         playRate, exchangeRateBalls, startSpin, currentSpin,
@@ -16,7 +12,7 @@ function calculatePachinkoEV(inputs, machine) {
     } = inputs;
 
     const ballsPer1k = 1000 / playRate;
-    let valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
+    const valuePerBallCashout = (1000 / exchangeRateBalls) * (playRate / 4);
 
     const borderBase = machine ? machine.border : 0;
     const prob = machine ? machine.prob : 0;
@@ -39,8 +35,8 @@ function calculatePachinkoEV(inputs, machine) {
             : 1.0;
     }
 
-    let turnRatePer1k = totalInvestedYen > 0 ? (totalSpinsMeasured / totalInvestedYen) * 1000 : 0;
-    let measuredRb = (bonusRounds > 0 && afterBonusBalls > 0) ? (afterBonusBalls - currentBalls) / bonusRounds : 0;
+    const turnRatePer1k = totalInvestedYen > 0 ? (totalSpinsMeasured / totalInvestedYen) * 1000 : 0;
+    const measuredRb = (bonusRounds > 0 && afterBonusBalls > 0) ? (afterBonusBalls - currentBalls) / bonusRounds : 0;
 
     let activeBorderBase = borderBase;
     if (measuredRb > 0 && prob > 0) {
@@ -53,8 +49,7 @@ function calculatePachinkoEV(inputs, machine) {
     const exchangeRateYen = valuePerBallCashout * (4 / playRate);
     const conversionFactor = 4 / exchangeRateYen;
 
-    // 1回転あたりの期待値計算 (玉単価ベース) - [スプレッドシート J14 相当]
-    // 式: ((1R出玉 / 大当たり確率) - (1kあたりの玉数 / 回転率)) * 4円 / (1kあたりの玉数 / 250玉)
+    // 1回転あたりの期待値計算 (玉単価ベース)
     const normalEVPerSpinRaw = prob > 0 && turnRatePer1k > 0
         ? (((rb / prob) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)
         : 0;
@@ -78,7 +73,6 @@ function calculatePachinkoEV(inputs, machine) {
     const hasYutime = machineYutimeLimit > 0 && primaryProb > 0;
 
     if (hasYutime) {
-        // 遊タイム到達までの残り回転数に応じた期待確率等の計算 - [スプレッドシート I17 相当]
         const yutimeSpinsRemaining = Math.max(0, machineYutimeLimit - startSpin);
         const yutimeSpinCountForCalc = machineYutimeSpinCount > 0 ? machineYutimeSpinCount : yutimeSpinsRemaining;
         const yutimeSuccessProb = 1 - Math.pow(1 - 1 / primaryProb, yutimeSpinCountForCalc);
@@ -86,24 +80,29 @@ function calculatePachinkoEV(inputs, machine) {
         const missProb = (primaryProb - 1) / primaryProb;
         const effectiveProb = primaryProb * (1 - Math.pow(missProb, Math.max(0, yutimeSpinsRemaining)));
 
-        // 遊タイム中を含めた実質的な大当たり確率の調整
         const yutimeTotalProb = machineAvgChain > 0 && effectiveProb > 0 ? effectiveProb / (machineAvgChain * 10) : prob;
 
-        // 遊タイム考慮時の持ち玉単価計算 - [スプレッドシート I18 相当]
-        const yutimeBallUnitPriceRaw = yutimeTotalProb > 0 && turnRatePer1k > 0
-            ? (((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250)) * yutimeSuccessProb)
+        // J18相当: 遊タイム等価回転単価（yutimeSuccessProbはK18変換時に適用）
+        const yutimeEVPerSpinRaw = yutimeTotalProb > 0 && turnRatePer1k > 0
+            ? ((((rb / yutimeTotalProb) - (ballsPer1k / turnRatePer1k)) * 4) / (ballsPer1k / 250))
             : 0;
-        yutimeBallUnitPriceResult = yutimeBallUnitPriceRaw >= 0 ? (yutimeBallUnitPriceRaw / conversionFactor) : (yutimeBallUnitPriceRaw * conversionFactor);
+        // K18相当: 遊タイム持玉単価（交換率＋成功確率考慮）
+        yutimeBallUnitPriceResult = yutimeEVPerSpinRaw >= 0
+            ? (yutimeEVPerSpinRaw / conversionFactor * yutimeSuccessProb)
+            : (yutimeEVPerSpinRaw * conversionFactor / yutimeSuccessProb);
 
-        // 遊タイム考慮時の現金単価計算 - [スプレッドシート I19 相当]
-        const yutimeCashUnitPriceRawBase = yutimeTotalProb > 0 && turnRatePer1k > 0
-            ? (((rb / yutimeTotalProb * valuePerBallCashout) - (1000 / turnRatePer1k)) * (250 / ballsPer1k))
+        // J19のbase: (rb / yutimeTotalProb * exchangeRateYen - 1000/turnRatePer1k) * 250/ballsPer1k
+        const yutimeCashBase = yutimeTotalProb > 0 && turnRatePer1k > 0
+            ? (((rb / yutimeTotalProb * exchangeRateYen) - (1000 / turnRatePer1k)) * (250 / ballsPer1k))
             : 0;
-        const yutimeSuccessProbSq = Math.pow(yutimeSuccessProb, 2);
-        const yutimeCashUnitPriceRaw = yutimeCashUnitPriceRawBase <= 0
-            ? (yutimeSuccessProbSq > 0 ? yutimeCashUnitPriceRawBase / yutimeSuccessProbSq : yutimeCashUnitPriceRawBase)
-            : yutimeCashUnitPriceRawBase * yutimeSuccessProbSq;
-        yutimeCashUnitPriceResult = yutimeCashUnitPriceRaw >= 0 ? (yutimeCashUnitPriceRaw / conversionFactor) : (yutimeCashUnitPriceRaw * conversionFactor);
+        // J19: IF(base < 0, base / G23, base * G23) — yutimeSuccessProb 1回目適用
+        const yutimeCashJ19 = yutimeCashBase < 0
+            ? yutimeCashBase / yutimeSuccessProb
+            : yutimeCashBase * yutimeSuccessProb;
+        // K19: IF(J19>=0, J19/G18*G23, J19*G18/G23) — yutimeSuccessProb 2回目適用
+        yutimeCashUnitPriceResult = yutimeCashJ19 >= 0
+            ? (yutimeCashJ19 / conversionFactor * yutimeSuccessProb)
+            : (yutimeCashJ19 * conversionFactor / yutimeSuccessProb);
 
         yutimeValuePerSpin = (yutimeBallUnitPriceResult * ballRatio) + (yutimeCashUnitPriceResult * (1 - ballRatio));
         yutimeEV = yutimeValuePerSpin * totalSpinsMeasured;
